@@ -1,9 +1,7 @@
-@props(['day' => '', 'year' => ''])
+@props(['puzzle'])
 
-<span style="grid-column: 1; text-align: right;">{{ "$day" }}</span>
-<span style="grid-column: 2; text-align: center;"><a href="https://adventofcode.com/{{$year}}/day/{{$day}}" target="_blank">🎅</a></span>
-<span style="grid-column: 3; text-align: center;"><a href="\puzzles\create\{{ $year }}\{{ $day }}">🎁</a></span>
-<span style="grid-column: 4; text-align: center"><a href="\puzzles\calc\{{ $year }}\{{ $day }}">🧮</a></span>
-<span style="grid-column: 5; text-align: right;">solution part 1</span>
-
-<span style="grid-column: 6; text-align: right;">solution part 2</span>
+<span>{{ "$puzzle->day" }}</span>
+<span><a href="https://adventofcode.com/{{$puzzle->year}}/day/{{$puzzle->day}}" target="_blank">🎅</a></span>
+<span><a href="/puzzles/{{$puzzle->id}}">🧮</a></span>
+<span>{{ $puzzle->part1 ?? "TODO" }}</span>
+<span>{{ $puzzle->part2 ?? "TODO" }}</span>

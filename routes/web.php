@@ -8,14 +8,13 @@ Route::get('/', function () {
 });
 
 Route::get('/puzzles', [PuzzleController::class, 'index']);
-Route::get('/puzzles/create/{year?}/{day?}', [PuzzleController::class, 'create']);
+Route::get('/puzzles/create', [PuzzleController::class, 'create']);
 Route::post('/puzzles', [PuzzleController::class, 'store']);
-
-// Route::get('/jobs/{job}', [JobController::class, 'show']);
+Route::get('/puzzles/{puzzle}', [PuzzleController::class, 'show']);
+Route::patch('/puzzles/{puzzle}', [PuzzleController::class, 'update']);
 
 // Route::get('/jobs/{job}/edit', [JobController::class, 'edit'])
 //     ->middleware('auth')
 //     ->can('edit', 'job');
 
-// Route::patch('/jobs/{job}', [JobController::class, 'update']);
 // Route::delete('/jobs/{job}', [JobController::class, 'destroy']);

@@ -13,15 +13,17 @@ class PuzzleController extends Controller
      */
     public function index()
     {
-        return view('home');
+        $puzzles = Puzzle::all()->sortBy('day');
+
+        return view('puzzles.index', ['puzzles' => $puzzles]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create($year = '', $day = '')
+    public function create()
     {
-        return view('puzzle.create', ['year' => $year, 'day' => $day]);
+        return view('puzzles.create');
     }
 
     /**
@@ -48,7 +50,7 @@ class PuzzleController extends Controller
      */
     public function show(Puzzle $puzzle)
     {
-        //
+        return view('puzzles.show', ['puzzle' => $puzzle]);
     }
 
     /**
@@ -56,7 +58,7 @@ class PuzzleController extends Controller
      */
     public function edit(Puzzle $puzzle)
     {
-        //
+        dd("edit", $puzzle);
     }
 
     /**
@@ -64,14 +66,14 @@ class PuzzleController extends Controller
      */
     public function update(Request $request, Puzzle $puzzle)
     {
-        //
+        dd("update", $puzzle, $request);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Puzzle $puzzle)
-    {
-        //
-    }
+    // public function destroy(Puzzle $puzzle)
+    // {
+    //     //
+    // }
 }
