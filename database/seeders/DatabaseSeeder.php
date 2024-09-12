@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Puzzle;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -19,5 +20,12 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        for($i = 1; $i < 26; ++$i) {
+            Puzzle::factory()->create([
+                'day' => $i,
+                'year' => '2021',
+            ]);
+        }
     }
 }

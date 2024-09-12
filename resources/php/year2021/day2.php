@@ -1,6 +1,6 @@
 <?php
 
-function navigate($stringList) {
+function navigate(array $stringList): int {
     $horizontalPos = 0;
     $depth = 0;
 
@@ -20,7 +20,7 @@ function navigate($stringList) {
     return $horizontalPos * $depth;
 }
 
-function navigate2($stringList) {
+function navigate2(array $stringList): int {
     $horizontalPos = 0;
     $depth = 0;
     $aim = 0;
@@ -42,12 +42,16 @@ function navigate2($stringList) {
     return $horizontalPos * $depth;
 }
 
+
+
 $testInput = ['forward 5', 'down 5', 'forward 8', 'up 3', 'down 8', 'forward 2',];
 $tests = [];
 $tests[] = ['result' => navigate($testInput), 'expected' => 150];
 $tests[] = ['result' => navigate2($testInput), 'expected' => 900];
 
-$input = explode("\r\n", $input);
+
+
 $parts = [];
-$parts[] = ['result' => navigate($input), 'expected' => 1882980];
-$parts[] = ['result' => navigate2($input), 'expected' => 1971232560];
+$input = explode("\r\n", $puzzle->input);
+$parts[] = ['result' => navigate($input), 'expected' => (int)$puzzle->part1];//1882980
+$parts[] = ['result' => navigate2($input), 'expected' => (int)$puzzle->part2];//1971232560

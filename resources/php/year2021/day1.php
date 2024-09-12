@@ -1,6 +1,6 @@
 <?php
 
-function countDeeper($stringList) {
+function countDeeper(array $stringList): int {
     $deeper = 0;
     $lastLine = null;
 
@@ -20,7 +20,7 @@ function countDeeper($stringList) {
     return $deeper;
 }
 
-function countDeeperAverage($stringList) {
+function countDeeperAverage(array $stringList): int {
     $deeper = 0;
     $loopEnd = sizeof($stringList);
 
@@ -36,12 +36,16 @@ function countDeeperAverage($stringList) {
     return $deeper;
 }
 
+
+
 $testInput = ['199','200','208','210','200','207','240','269','260','263',];
 $tests = [];
 $tests[] = ['result' => countDeeper($testInput), 'expected' => 7];
 $tests[] = ['result' => countDeeperAverage($testInput), 'expected' => 5];
 
-$input = explode("\r\n", $input);
+
+
 $parts = [];
-$parts[] = ['result' => countDeeper($input), 'expected' => 1759];
-$parts[] = ['result' => countDeeperAverage($input), 'expected' => 1805];
+$input = explode("\r\n", $puzzle->input);
+$parts[] = ['result' => countDeeper($input), 'expected' => (int)$puzzle->part1];// 1759
+$parts[] = ['result' => countDeeperAverage($input), 'expected' => (int)$puzzle->part2];//1805

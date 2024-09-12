@@ -50,7 +50,19 @@ class PuzzleController extends Controller
      */
     public function show(Puzzle $puzzle)
     {
+        if (empty($puzzle->input)) {
+            return redirect("/puzzles/{$puzzle->id}/editInput");
+        }
+
         return view('puzzles.show', ['puzzle' => $puzzle]);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function editInput(Puzzle $puzzle)
+    {
+        return view('puzzles.editInput', ['puzzle' => $puzzle]);
     }
 
     /**
@@ -64,9 +76,32 @@ class PuzzleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Puzzle $puzzle)
+    public function updateInput(Request $request, Puzzle $puzzle)
     {
-        dd("update", $puzzle, $request);
+        // request()->validate([
+        //     'title' => ['required', 'min:3'],
+        //     'salary' => ['required']
+        // ]);
+
+        $puzzle->update([
+            'input' => request('input'),
+        ]);
+
+        return redirect("/puzzles/{$puzzle->id}");
+    }
+    public function updateParts(Request $request, Puzzle $puzzle)
+    {
+        // request()->validate([
+        //     'title' => ['required', 'min:3'],
+        //     'salary' => ['required']
+        // ]);
+
+        $puzzle->update([
+            'part1' => request('part1'),
+            'part2' => request('part2'),
+        ]);
+
+        return redirect("/puzzles");
     }
 
     /**

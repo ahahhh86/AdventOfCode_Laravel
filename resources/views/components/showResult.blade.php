@@ -4,4 +4,4 @@
     $passed = $result === $expected;
 ?>
 
-<li style="color: {{ $passed ? "lime" : "red" }}">{{ $passed ? '👍' : '☠' }} {{ $result }} | {{ $expected }}</li>
+<li style="color: {{ $passed ? "lime" : "red" }}">{{ $result }} ({{ $expected }} expected {{ $passed ? '👍' : '☠' }})</li>

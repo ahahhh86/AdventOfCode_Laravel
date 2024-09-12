@@ -11,6 +11,14 @@ h1, h2 {
 
 a {
     text-decoration: none;
+    background-color: #98FB982A;
+    color: springgreen;
+    padding: 5px 10px;
+    border-radius: 50%;
+}
+
+a:hover {
+    background-color: #98FB987F;
 }
 
 p {
@@ -55,7 +63,7 @@ ol {
     text-align: right;
 }
 
-.dayTable span:nth-of-type(5n) {
+.dayTable span:nth-of-type(5n + 5) {
     grid-column: 5;
     text-align: right;
 }
