@@ -1,51 +1,61 @@
 <?php
 
-function countDeeper(array $stringList): int {
-    $deeper = 0;
-    $lastLine = null;
+function readInput(array $strList): array {
+    $result = [];
 
-    foreach($stringList as $line) {
-        if ($lastLine === null) {
-            $lastLine = $line;
-            continue;
-        }
-
-        if ((int)$line > (int)$lastLine) {
-            ++$deeper;
-        }
-
-        $lastLine = $line;
+    foreach($strList as $line) {
+        $result[] = (int) $line;
     }
 
-    return $deeper;
+    return $result;
 }
 
-function countDeeperAverage(array $stringList): int {
-    $deeper = 0;
-    $loopEnd = sizeof($stringList);
+function countIfNextBigger(array $arr): int {
+    $result = 0;
+    $lastItem = null;
 
-    for($i=3; $i < $loopEnd; $i++) {
-        $sum1 = $stringList[$i-3] + $stringList[$i-2] + $stringList[$i-1];
-        $sum2 = $stringList[$i-2] + $stringList[$i-1] + $stringList[$i];
-
-        if ($sum1 < $sum2) {
-            ++$deeper;
+    foreach($arr as $item) {
+        if (!is_null($lastItem) && $item > $lastItem) {
+            ++$result;
         }
+
+        $lastItem = $item;
     }
 
-    return $deeper;
+    return $result;
+}
+
+function countIfBiggerAverage(array $arr): int {
+    $sumArray = []; // if sum or average does not matter for comparison, but sum needs less operations
+
+    for($i = 0; $i < (sizeof($arr) - 2); ++$i) {
+        $sumArray[] = array_sum(array_slice($arr, $i, 3));
+    }
+
+    return countIfNextBigger($sumArray);
 }
 
 
 
-$testInput = ['199','200','208','210','200','207','240','269','260','263',];
+$testInput = readInput([
+    "199",
+    "200",
+    "208",
+    "210",
+    "200",
+    "207",
+    "240",
+    "269",
+    "260",
+    "263"
+]);
 $tests = [];
-$tests[] = ['result' => countDeeper($testInput), 'expected' => 7];
-$tests[] = ['result' => countDeeperAverage($testInput), 'expected' => 5];
+$tests[] = ['result' => countIfNextBigger($testInput), 'expected' => 7];
+$tests[] = ['result' => countIfBiggerAverage($testInput), 'expected' => 5];
 
 
 
+$input = readInput(explode("\r\n", $puzzle->input));
 $parts = [];
-$input = explode("\r\n", $puzzle->input);
-$parts[] = ['result' => countDeeper($input), 'expected' => (int)$puzzle->part1];// 1759
-$parts[] = ['result' => countDeeperAverage($input), 'expected' => (int)$puzzle->part2];//1805
+$parts[] = ['result' => countIfNextBigger($input), 'expected' => (int)$puzzle->part1];// 1759
+$parts[] = ['result' => countIfBiggerAverage($input), 'expected' => (int)$puzzle->part2];// 1805

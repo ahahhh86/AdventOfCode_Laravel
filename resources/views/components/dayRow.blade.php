@@ -6,7 +6,7 @@
 
 <span>
     <a href="/puzzles/{{$puzzle->id}}/editInput">{{ empty($puzzle->input) ? '❌' : '✔' }}</a>
-</span> {{-- TODO: link to update input --}}
+</span>
 
 <span>
     <a href="/puzzles/{{$puzzle->id}}">{{ empty($puzzle->part1) ? '🧮' : (empty($puzzle->part2) ? '⭐' : '⭐⭐') }}</a>

@@ -1,32 +1,33 @@
 <?php
 
-function compileInput(array $stringList): array {
+function readInput(array $stringList): array {
     $result = [];
     $result['numbers'] = explode(",", $stringList[0]);
     $result['boards'] = [];
     $boardNum=0;
 
-    for($i=2; $i < sizeof($stringList); ++$i) {
+    for($i=2; $i < sizeof($stringList); ++$i) {// no foreach, because the first two lines should be skipped
         if ($stringList[$i] === "") {
             ++$boardNum;
             $result['boards'][$boardNum] = [];
             continue;
         }
 
+        // small numbers are filled with spaces (" 7"), but every array should have  the same size, so empty arrays nedd to be skipped
         $result['boards'][$boardNum][] = preg_split(pattern: "/[\s]+/", subject: $stringList[$i], flags: PREG_SPLIT_NO_EMPTY);
     }
 
     return $result;
 }
 
-function allElementsTrue(array $array): bool {
+function areAllElementsTrue(array $array): bool {
     $allElementsSame = count(array_unique($array)) === 1;
     return $allElementsSame && $array[0];
 }
 
 function isWonHorizontal(array $board): bool {
     foreach($board as $line) {
-        if (allElementsTrue($line)) {
+        if (areAllElementsTrue($line)) {
             return true;
         }
     }
@@ -40,27 +41,39 @@ function flipBoard(array $board): array {
     for($i=0; $i < sizeof($board); ++$i) {
         for($j=0; $j < sizeof($board[$i]); ++$j) {
             $result[$i][$j] = $board[$j][$i];
-            // $result[$j][$i] = $board[$i][$j];
         }
     }
 
     return $result;
 }
 
-function createCheckBoard(array $board): array {
+function isWon(array $board): bool {
+    return
+        isWonHorizontal($board) ||
+        isWonHorizontal(flipBoard($board)); // aka isWonVertical
+}
+
+function createOneCheckBoard(array $board): array {
     $result = [];
 
-    for($i=0; $i < sizeof($board); ++$i) {
-        $result[$i] = [];
-        for($j=0; $j < sizeof($board[$i]); ++$j) {
-            $result[$i][$j] = false;
-        }
+    foreach($board as $line) {
+        $result[] = array_fill(0, sizeof($line), false);
     }
 
     return $result;
 }
 
-function check(int $number, array $board, array &$check) {
+function createCheckBoards(array $board): array {
+    $result = [];
+
+    foreach($board as $temp) {
+        $result[] = createOneCheckBoard($temp);
+    }
+
+    return $result;
+}
+
+function check(int $number, array $board, array &$check): void {
     for($i=0; $i < sizeof($board); ++$i) {
         for($j=0; $j < sizeof($board[$i]); ++$j) {
             if ($board[$i][$j] == $number) {
@@ -86,17 +99,14 @@ function score(int $number, array $board, array $check): int {
     return $result;
 }
 
-function playBingo(array $input) {
-    $checkBoards = [];
-    foreach($input['boards'] as $temp) {
-        $checkBoards[] = createCheckBoard($temp);
-    }
+function playBingo(array $input): int {
+    $checkBoards = createCheckBoards($input['boards']);
 
     foreach($input['numbers'] as $number) {
         for($i=0; $i < sizeof($input['boards']); ++$i) {
             check($number, $input['boards'][$i], $checkBoards[$i]);
             
-            if (isWonHorizontal($checkBoards[$i]) || isWonHorizontal(flipBoard($checkBoards[$i]))) {
+            if (isWon($checkBoards[$i])) {
                 return score($number, $input['boards'][$i], $checkBoards[$i]);
             }
         }
@@ -105,11 +115,8 @@ function playBingo(array $input) {
     throw new ErrorException("no board has won");
 }
 
-function playBingo2(array $input) {
-    $checkBoards = [];
-    foreach($input['boards'] as $temp) {
-        $checkBoards[] = createCheckBoard($temp);
-    }
+function playBingo2(array $input): int {
+    $checkBoards = createCheckBoards($input['boards']);
     $boardsWon = array_fill(0, sizeof($checkBoards), false);
 
     foreach($input['numbers'] as $number) {
@@ -118,9 +125,9 @@ function playBingo2(array $input) {
 
             check($number, $input['boards'][$i], $checkBoards[$i]);
             
-            if (isWonHorizontal($checkBoards[$i]) || isWonHorizontal(flipBoard($checkBoards[$i]))) {
+            if (isWon($checkBoards[$i])) {
                 $boardsWon[$i] = true;
-                if (allElementsTrue($boardsWon)) {
+                if (areAllElementsTrue($boardsWon)) {
                     return score($number, $input['boards'][$i], $checkBoards[$i]);
                 }
             }
@@ -134,7 +141,7 @@ function playBingo2(array $input) {
 
 
 
-$testInput = compileInput([
+$testInput = readInput([
     '7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1',
     '',
     '22 13 17 11  0',
@@ -162,7 +169,7 @@ $tests[] = ['result' => playBingo2($testInput), 'expected' => 1924];
 
 
 
+$input = readInput(explode("\r\n", $puzzle->input));
 $parts = [];
-$input = compileInput(explode("\r\n", $puzzle->input));
 $parts[] = ['result' => playBingo($input), 'expected' => (int)$puzzle->part1];// 33348
 $parts[] = ['result' => playBingo2($input), 'expected' => (int)$puzzle->part2];// 8112
