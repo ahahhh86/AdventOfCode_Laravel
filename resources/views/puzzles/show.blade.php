@@ -1,13 +1,9 @@
 <x-layout>
-    {{-- <h2>{{ "$puzzle->year day $puzzle->day" }}</h2> --}}
     <x-dayHeader :puzzle="$puzzle"></x-dayHeader>
 
     <?php
-        $includeFile = __DIR__."/../../../resources/php/year{$puzzle->year}/day{$puzzle->day}.php";
-        if (file_exists($includeFile)) {
-            include $includeFile;
-        }
-    ?> {{-- TODO: find better way--}}
+        require_once __DIR__."/../../../resources/puzzles/day0.php";
+    ?>
 
     @if(empty($input))
         <p>

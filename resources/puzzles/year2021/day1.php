@@ -49,13 +49,11 @@ $testInput = readInput([
     "260",
     "263"
 ]);
-$tests = [];
 $tests[] = ['result' => countIfNextBigger($testInput), 'expected' => 7];
 $tests[] = ['result' => countIfBiggerAverage($testInput), 'expected' => 5];
 
 
 
 $input = readInput(explode("\r\n", $puzzle->input));
-$parts = [];
 $parts[] = ['result' => countIfNextBigger($input), 'expected' => (int)$puzzle->part1];// 1759
 $parts[] = ['result' => countIfBiggerAverage($input), 'expected' => (int)$puzzle->part2];// 1805

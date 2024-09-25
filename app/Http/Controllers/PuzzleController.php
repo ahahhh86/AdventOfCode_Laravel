@@ -31,9 +31,8 @@ class PuzzleController extends Controller
      */
     public function store(Request $request)
     {
+        // TODO:
         // request()->validate([
-        //     'title' => ['required', 'min:3'],
-        //     'salary' => ['required']
         // ]);
         
         Puzzle::create([
@@ -78,9 +77,8 @@ class PuzzleController extends Controller
      */
     public function updateInput(Request $request, Puzzle $puzzle)
     {
+        // TODO:
         // request()->validate([
-        //     'title' => ['required', 'min:3'],
-        //     'salary' => ['required']
         // ]);
 
         $puzzle->update([
@@ -91,9 +89,8 @@ class PuzzleController extends Controller
     }
     public function updateParts(Request $request, Puzzle $puzzle)
     {
+        // TODO:
         // request()->validate([
-        //     'title' => ['required', 'min:3'],
-        //     'salary' => ['required']
         // ]);
 
         $puzzle->update([
