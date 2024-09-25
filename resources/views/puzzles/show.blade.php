@@ -1,41 +1,41 @@
 <x-layout>
     <x-dayHeader :puzzle="$puzzle"></x-dayHeader>
 
-    <?php
-        require_once __DIR__."/../../../resources/puzzles/day0.php";
-    ?>
+    @php($day = new App\Models\Puzzles\Day($puzzle))
 
-    @if(empty($input))
+    @if(!$day->isSolved())
         <p>
             This puzzle has not (yet) been solved
         </p>
     @endif
 
-    @if(!empty($tests))
+    @if($day->hasTests())
         <p>
             Tests:
             <ol>
-                @foreach($tests as $test)
-                    <x-showResult :result="$test['result']" :expected="$test['expected']"></x-showResult>
+                @foreach($day->getTests() as $test)
+                    <x-showResult :data="$test"></x-showResult>
                 @endforeach
             </ol>
         </p>
     @endif
 
-    @if(!empty($parts))
+    @if($day->hasResults())
+        @php($results = $day->getResults())
         <p>
             Results:
             <ol>
-                @foreach($parts as $part)
-                    <x-showResult :result="$part['result']" :expected="$part['expected']"></x-showResult>
+                @foreach($results as $result)
+                    <x-showResult :data="$result"></x-showResult>
                 @endforeach
             </ol>
         </p>
 
         <form method="POST" action="/puzzles/{{$puzzle->id}}">
-            <input type="hidden" name="part1" value="{{ $parts[0]['result'] ?? null }}">
-            <input type="hidden" name="part2" value="{{ $parts[1]['result'] ?? null }}">
+            <input type="hidden" name="part1" value="{{ $results[0]['result'] ?? null }}">
+            <input type="hidden" name="part2" value="{{ $results[1]['result'] ?? null }}">
 
+            <a href="/" style="text-align: center">back</a>
             @csrf
             @method('PATCH')
             <input type="submit">

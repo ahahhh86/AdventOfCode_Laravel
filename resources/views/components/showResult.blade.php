@@ -1,7 +1,7 @@
-@props(['result', 'expected'])
+@props(['result', 'expected', 'data'])
 
 <?php
-    $passed = $result === $expected;
+    $passed = $data['result'] === $data['expected'];
 ?>
 
-<li style="color: {{ $passed ? "lime" : "red" }}">{{ $result }} ({{ $expected }} expected {{ $passed ? '👍' : '☠' }})</li>
+<li style="color: {{ $passed ? "lime" : "red" }}">{{ $data['result'] }} ({{ $data['expected'] }} expected {{ $passed ? '👍' : '☠' }})</li>
