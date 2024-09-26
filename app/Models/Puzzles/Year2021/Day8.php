@@ -6,14 +6,14 @@ use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
 class Day8 extends Day0 {
-    private function createInput(string $str) {
+    private function createPattern(string $str): array {
         $result = [];
         $digits = explode(" ",$str);
 
         foreach($digits as $digit) {
-            $buffer = str_split($digit, 1);
-            sort($buffer);
-            $result[] = $buffer;
+            $segments = str_split($digit, 1);
+            sort($segments); // makes it easier to find matching digits, otherwise the order of segments is random
+            $result[] = implode('', $segments);
         }
 
         return $result;
@@ -24,11 +24,13 @@ class Day8 extends Day0 {
 
         foreach($arr as $line) {
             $tmp = explode(" | ", $line);
-            $result[] = ['patterns' => $this->createInput($tmp[0]), 'output' => $this->createInput($tmp[1])];
+            $result[] = ['patterns' => $this->createPattern($tmp[0]), 'output' => $this->createPattern($tmp[1])];
         }
 
         return $result;
     }
+
+
 
     private function countDigits1478(array $arr): int {
         $SEGMENTS_1 = 2;
@@ -40,7 +42,7 @@ class Day8 extends Day0 {
 
         foreach($arr as $line) {
             foreach($line['output'] as $digit) {
-                switch (sizeof($digit)) {
+                switch (strlen($digit)) {
                     case $SEGMENTS_1:
                     case $SEGMENTS_4:
                     case $SEGMENTS_7:
@@ -53,29 +55,36 @@ class Day8 extends Day0 {
         return $result;
     }
 
-    private function identify1478(array $patterns, int $digit): array {
-        $patternLength = match ($digit) {
-            1 => 2,
-            4 => 4,
-            7 => 3,
-            8 => 7,
-            default => throw new \ErrorException("unexpected input: {$digit}")
-        };
+    private function identify1478(array $patterns): array {
+        $result = [];
 
         foreach($patterns as $pattern) {
-            if (sizeof($pattern) === $patternLength) {
-                return $pattern;
+            switch(strlen($pattern)) {
+                case 2:
+                    $result[1] = $pattern;
+                    break;
+                case 4:
+                    $result[4] = $pattern;
+                    break;
+                case 3:
+                    $result[7] = $pattern;
+                    break;
+                case 7:
+                    $result[8] = $pattern;
+                    break;
             }
         }
 
-        return [];
+        if (sizeof($result) !== 4) {
+            throw new \ErrorException("could not find all numbers");
+        }
+
+        return $result;
     }
 
-    private function isInArray(array $pattern, array $source): bool {
-        $str = implode("", $source);
-
-        foreach($pattern as $letter) {
-            if (!str_contains($str, $letter)) {
+    private function isInDigit(string $pattern, string $digit): bool {
+        foreach(str_split($pattern, 1) as $letter) {
+            if (!str_contains($digit, $letter)) {
                 return false;
             }
         }
@@ -83,98 +92,66 @@ class Day8 extends Day0 {
         return true;
     }
 
-    private function getDifference(array $a, array $b): array {
-        $result = [];
-        $str = implode("", $b);
+    private function reduceDigit(string $digit, string $subtract): string {
+        $result = '';
 
-        foreach($a as $letter) {
-            if (!str_contains($str, $letter)) {
-                $result[] = $letter;
+        foreach(str_split($digit, 1) as $letter) {
+            if (!str_contains($subtract, $letter)) {
+                $result .= $letter;
             }
         }
 
         return $result;
     }
 
-    private function identify069(array $patterns, int $digit, array $identified): array {
-        $patternLength = 6;
+    private function identifyNumbers(array $digits): array {
+        $patternLength069 = 6;
+        $patternLength235 = 5;
+        $result = $this->identify1478($digits);
+        $reduced4By1 = $this->reduceDigit($result[4], $result[1]);
 
-        foreach($patterns as $pattern) {
-            if (sizeof($pattern) === $patternLength) {
-                switch($digit) {
-                    case 0:
-                        if ($this->isInArray($identified[1], $pattern) && !$this->isInArray($identified[4], $pattern)) {
-                            return $pattern;
-                        }
-                        break;
-                    case 6:
-                        $difference80 = $this->getDifference($identified[8], $identified[0]);
-                        if (!$this->isInArray($identified[1], $pattern) && $this->isInArray($difference80, $pattern)) {
-                            return $pattern;
-                        }
-                        break;
-                    case 9:
-                        if ($this->isInArray($identified[1], $pattern) && $this->isInArray($identified[4], $pattern)) {
-                            return $pattern;
-                        }
-                        break;
-                    default: throw new \ErrorException("unexpected input: {$digit}");
+        foreach($digits as $digit) {
+            // identify 0, 6 or 9?
+            if (strlen($digit) === $patternLength069) {
+                if ($this->isInDigit($result[1], $digit)) {
+                    if ($this->isInDigit($result[4], $digit)) {
+                        $result[9] = $digit;
+                    } else {
+                        $result[0] = $digit;
+                    }
+                } else {
+                    $result[6] = $digit;
+                }
+
+            // identify 2, 3 or 5?
+            } else if (strlen($digit) === $patternLength235) {
+                if ($this->isInDigit($result[1], $digit)) {
+                    $result[3] = $digit;
+                } else {
+                    if ($this->isInDigit($reduced4By1, $digit)) {
+                        $result[5] = $digit;
+                    } else {
+                        $result[2] = $digit;
+                    }
                 }
             }
         }
 
-        return [];
-    }
-
-    private function identify235(array $patterns, int $digit, array $identified): array {
-        $patternLength = 5;
-        $difference41 = $this->getDifference($identified[4], $identified[1]);
-
-        foreach($patterns as $pattern) {
-            if (sizeof($pattern) === $patternLength) {
-                switch($digit) {
-                    case 2:
-                        if (!$this->isInArray($difference41, $pattern) && !$this->isInArray($identified[1], $pattern)) {
-                            return $pattern;
-                        }
-                        break;
-                    case 3:
-                        if ($this->isInArray($identified[1], $pattern)) {
-                            return $pattern;
-                        }
-                        break;
-                    case 5:
-                        if ($this->isInArray($difference41, $pattern)) {
-                            return $pattern;
-                        }
-                        break;
-                    default: throw new \ErrorException("unexpected input: {$digit}");
-                }
-            }
+        if (sizeof($result) !== 10) {
+            throw new \ErrorException("could not find all numbers");
         }
 
-        return [];
+        return $result;
     }
 
-    private function calculateOutputNumber(array $arr): int {
-        $identified = [
-            1 => $this->identify1478($arr['patterns'], 1),
-            4 => $this->identify1478($arr['patterns'], 4),
-            7 => $this->identify1478($arr['patterns'], 7),
-            8 => $this->identify1478($arr['patterns'], 8),
-        ];
-        $identified[0] = $this->identify069($arr['patterns'], 0, $identified);
-        $identified[6] = $this->identify069($arr['patterns'], 6, $identified);
-        $identified[9] = $this->identify069($arr['patterns'], 9, $identified);
-        $identified[2] = $this->identify235($arr['patterns'], 2, $identified);
-        $identified[3] = $this->identify235($arr['patterns'], 3, $identified);
-        $identified[5] = $this->identify235($arr['patterns'], 5, $identified);
+    private function calculateOutputNumber(array $note): int {
+        $identified = $this->identifyNumbers($note['patterns']);
 
         $result = "";
 
-        foreach($arr['output'] as $output) {
+        foreach($note['output'] as $output) {
             foreach($identified as $key => $value) {
-                if ($output == $value) {
+                if ($output === $value) {
                     $result .= $key;
                     break;
                 }
@@ -188,11 +165,11 @@ class Day8 extends Day0 {
         return (int)$result;
     }
 
-    private function accumulateDigits(array $arr): int {
+    private function accumulateDigits(array $notes): int {
         $result = 0;
 
-        foreach($arr as $line) {
-            $result += $this->calculateOutputNumber($line);
+        foreach($notes as $note) {
+            $result += $this->calculateOutputNumber($note);
         }
 
         return $result;
@@ -214,7 +191,7 @@ class Day8 extends Day0 {
             'gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce'
         ]);
         $testInput2 = $this->readInput(['acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf']);
-        // $this->addTest($this->countDigits1478($testInput), 26);
+        $this->addTest($this->countDigits1478($testInput), 26);
         $this->addTest($this->accumulateDigits($testInput2), 5353);
         $this->addTest($this->accumulateDigits($testInput), 61229);
 
