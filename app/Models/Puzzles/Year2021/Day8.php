@@ -23,8 +23,8 @@ class Day8 extends Day0 {
         $result = [];
 
         foreach($arr as $line) {
-            $tmp = explode(" | ", $line);
-            $result[] = ['patterns' => $this->createPattern($tmp[0]), 'output' => $this->createPattern($tmp[1])];
+            [$patterns, $output] = explode(" | ", $line);
+            $result[] = ['patterns' => $this->createPattern($patterns), 'output' => $this->createPattern($output)];
         }
 
         return $result;
@@ -32,7 +32,7 @@ class Day8 extends Day0 {
 
 
 
-    private function countDigits1478(array $arr): int {
+    private function countDigits1478(array $notes): int {// TODO: make nicer or use function form part 2
         $SEGMENTS_1 = 2;
         $SEGMENTS_4 = 4;
         $SEGMENTS_7 = 3;
@@ -40,7 +40,7 @@ class Day8 extends Day0 {
 
         $result = 0;
 
-        foreach($arr as $line) {
+        foreach($notes as $line) {
             foreach($line['output'] as $digit) {
                 switch (strlen($digit)) {
                     case $SEGMENTS_1:
@@ -49,6 +49,30 @@ class Day8 extends Day0 {
                     case $SEGMENTS_8:
                         ++$result;
                 }
+            }
+        }
+
+        return $result;
+    }
+
+
+
+    private function isInDigit(string $pattern, string $digit): bool {
+        foreach(str_split($pattern, 1) as $letter) {
+            if (!str_contains($digit, $letter)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function reduceDigit(string $digit, string $subtract): string {
+        $result = '';
+
+        foreach(str_split($digit, 1) as $letter) {
+            if (!str_contains($subtract, $letter)) {
+                $result .= $letter;
             }
         }
 
@@ -76,29 +100,7 @@ class Day8 extends Day0 {
         }
 
         if (sizeof($result) !== 4) {
-            throw new \ErrorException("could not find all numbers");
-        }
-
-        return $result;
-    }
-
-    private function isInDigit(string $pattern, string $digit): bool {
-        foreach(str_split($pattern, 1) as $letter) {
-            if (!str_contains($digit, $letter)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private function reduceDigit(string $digit, string $subtract): string {
-        $result = '';
-
-        foreach(str_split($digit, 1) as $letter) {
-            if (!str_contains($subtract, $letter)) {
-                $result .= $letter;
-            }
+            throw new \ErrorException('could not find all numbers');
         }
 
         return $result;
@@ -138,7 +140,7 @@ class Day8 extends Day0 {
         }
 
         if (sizeof($result) !== 10) {
-            throw new \ErrorException("could not find all numbers");
+            throw new \ErrorException('could not find all numbers');
         }
 
         return $result;
@@ -159,7 +161,7 @@ class Day8 extends Day0 {
         }
 
         if (strlen($result) !== 4) {
-            throw new \ErrorException("could not find correct output");
+            throw new \ErrorException('could not find correct output');
         }
 
         return (int)$result;
@@ -197,7 +199,7 @@ class Day8 extends Day0 {
 
 
 
-        $input = $this->readInput(explode("\r\n", $puzzle->input));
+        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
         $this->addResult($this->countDigits1478($input), (int)$puzzle->part1); // 261
         $this->addResult($this->accumulateDigits($input), (int)$puzzle->part2); // x
     }

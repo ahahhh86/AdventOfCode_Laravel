@@ -18,7 +18,7 @@ class Day6 extends Day0 {
     // Instead of tracking each fish separatly, group fishes by days left to reproduce
     // This changes he problem from exponential to linear
     function readInput(string $str): array {
-        $fishes = explode(",", $str);
+        $fishes = explode(',', $str);
         $result = array_fill(0, $this::FISH_ARRAY_LENGTH, 0);
 
         foreach($fishes as $fish) {

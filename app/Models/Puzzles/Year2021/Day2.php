@@ -75,19 +75,19 @@ class Day2 extends Day0 {
 
     public function __construct(Puzzle $puzzle) {
         $testInput = $this->readInput([
-            "forward 5",
-            "down 5",
-            "forward 8",
-            "up 3",
-            "down 8",
-            "forward 2"
+            'forward 5',
+            'down 5',
+            'forward 8',
+            'up 3',
+            'down 8',
+            'forward 2'
         ]);
         $this->addTest($this->navigate($testInput), 150);
         $this->addTest($this->navigate2($testInput), 900);
         
         
         
-        $input = $this->readInput(explode("\r\n", $puzzle->input));
+        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
         $this->addResult($this->navigate($input), (int)$puzzle->part1);// 1882980
         $this->addResult($this->navigate2($input), (int)$puzzle->part2);// 1971232560
     }

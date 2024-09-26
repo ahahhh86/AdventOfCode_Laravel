@@ -107,7 +107,7 @@ class Day5 extends Day0 {
         
         
         
-        $input = $this->readInput(explode("\r\n", $puzzle->input));
+        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
         $this->addResult($this->findSafeSpaces($input), (int)$puzzle->part1); // 8622
         $this->addResult($this->findSafeSpaces($input, true), (int)$puzzle->part2); // 22037
     }

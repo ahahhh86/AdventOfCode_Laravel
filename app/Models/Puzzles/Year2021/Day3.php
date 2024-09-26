@@ -105,7 +105,7 @@ class Day3 extends Day0 {
             }
         }
 
-        throw new \ErrorException("there are no lines left");
+        throw new \ErrorException('there are no lines left');
     }
 
     private function lifeSupportRating(array $matrix) {
@@ -119,25 +119,25 @@ class Day3 extends Day0 {
 
     public function __construct(Puzzle $puzzle) {
         $testInput = $this->readInput([
-            "00100",
-            "11110",
-            "10110",
-            "10111",
-            "10101",
-            "01111",
-            "00111",
-            "11100",
-            "10000",
-            "11001",
-            "00010",
-            "01010"
+            '00100',
+            '11110',
+            '10110',
+            '10111',
+            '10101',
+            '01111',
+            '00111',
+            '11100',
+            '10000',
+            '11001',
+            '00010',
+            '01010'
         ]);
         $this->addTest($this->powerConsumption($testInput), 198);
         $this->addTest($this->lifeSupportRating($testInput), 230);
         
         
         
-        $input = $this->readInput(explode("\r\n", $puzzle->input));
+        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
         $this->addResult($this->powerConsumption($input), (int)$puzzle->part1);// 3549854
         $this->addResult($this->lifeSupportRating($input), (int)$puzzle->part2);// 3765399
     }

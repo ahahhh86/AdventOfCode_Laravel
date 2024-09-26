@@ -19,8 +19,8 @@ class Day4 extends Day0 {
                 continue;
             }
     
-            // small numbers are filled with spaces (" 7"), but every array should have  the same size, so empty arrays nedd to be skipped
-            $result['boards'][$boardNum][] = preg_split(pattern: "/[\s]+/", subject: $stringList[$i], flags: PREG_SPLIT_NO_EMPTY);
+            // small numbers are filled with spaces (' 7'), but every array should have  the same size, so empty arrays nedd to be skipped
+            $result['boards'][$boardNum][] = preg_split(pattern: '/[\s]+/', subject: $stringList[$i], flags: PREG_SPLIT_NO_EMPTY);
         }
     
         return $result;
@@ -124,7 +124,7 @@ class Day4 extends Day0 {
             }
         }
     
-        throw new \ErrorException("not each board has won");
+        throw new \ErrorException('not each board has won');
     }
 
 
@@ -156,7 +156,7 @@ class Day4 extends Day0 {
 
 
 
-        $input = $this->readInput(explode("\r\n", $puzzle->input));
+        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
         $this->addResult($this->playBingo($input, true), (int)$puzzle->part1); // 33348
         $this->addResult($this->playBingo($input), (int)$puzzle->part2); // 8112
     }

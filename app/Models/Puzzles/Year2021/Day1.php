@@ -44,23 +44,23 @@ class Day1 extends Day0 {
 
     public function __construct(Puzzle $puzzle) {
         $testInput = $this->readInput([
-            "199",
-            "200",
-            "208",
-            "210",
-            "200",
-            "207",
-            "240",
-            "269",
-            "260",
-            "263"
+            '199',
+            '200',
+            '208',
+            '210',
+            '200',
+            '207',
+            '240',
+            '269',
+            '260',
+            '263'
         ]);
         $this->addTest($this->countIfNextBigger($testInput), 7);
         $this->addTest($this->countIfBiggerAverage($testInput), 5);
 
 
 
-        $input = $this->readInput(explode("\r\n", $puzzle->input));
+        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
         $this->addResult($this->countIfNextBigger($input), (int)$puzzle->part1);// 1759
         $this->addResult($this->countIfBiggerAverage($input), (int)$puzzle->part2);// 1805
     }
