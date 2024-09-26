@@ -1,7 +1,7 @@
 <x-layout>
     <x-dayHeader :puzzle="$puzzle"></x-dayHeader>
 
-    @php($day = new App\Models\Puzzles\Day($puzzle))
+    @php($day = new App\Models\Puzzles\DaySolver($puzzle))
 
     @if(!$day->isSolved())
         <p>

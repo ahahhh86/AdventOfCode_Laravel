@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Models\Puzzles\Year2021;
+namespace App\Models\Puzzles;
 
-class Day0 {
+abstract class Day0 {
     protected $tests = [];
     protected $results = [];
 

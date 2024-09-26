@@ -4,7 +4,7 @@ namespace App\Models\Puzzles;
 
 use App\Models\Puzzle;
 
-class Day {
+class DaySolver {
     public $tests = [];
     public $results = [];
 

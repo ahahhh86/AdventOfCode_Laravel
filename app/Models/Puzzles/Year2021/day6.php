@@ -3,14 +3,15 @@
 namespace App\Models\Puzzles\Year2021;
 
 use App\Models\Puzzle;
+use App\Models\Puzzles\Day0;
 
 class Day6 extends Day0 {
     private const PART1_CYCLES = 80;
     private const PART2_CYCLES = 256;
 
     private const FISH_CREATION_DURATION = 6;
-    private $NEW_FISH_CREATION_DURATION = $this::FISH_CREATION_DURATION + 2;
-    private $FISH_ARRAY_LENGTH = $this::$NEW_FISH_CREATION_DURATION + 1;
+    //private const NEW_FISH_CREATION_DURATION = 8;
+    private const FISH_ARRAY_LENGTH = 9;
 
 
 
@@ -18,7 +19,7 @@ class Day6 extends Day0 {
     // This changes he problem from exponential to linear
     function readInput(string $str): array {
         $fishes = explode(",", $str);
-        $result = array_fill(0, $this->FISH_ARRAY_LENGTH, 0);
+        $result = array_fill(0, $this::FISH_ARRAY_LENGTH, 0);
 
         foreach($fishes as $fish) {
             ++$result[(int)$fish];

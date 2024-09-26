@@ -3,6 +3,7 @@
 namespace App\Models\Puzzles\Year2021;
 
 use App\Models\Puzzle;
+use App\Models\Puzzles\Day0;
 
 class Day1 extends Day0 {
     private const COUNT_AVERAGE_OF = 3;
