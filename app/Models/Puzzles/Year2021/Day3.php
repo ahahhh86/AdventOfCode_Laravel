@@ -5,17 +5,33 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
-class Day3 extends Day0 {
-    private function readInput(array $strList): array {
-        $matrix = [];
-        foreach($strList as $line) {
-            $matrix[] = str_split($line, 1);
-        }
+class BinaryMatrix {
+    private $matrix = [];
 
-        return $matrix;
+    public function __construct(array $stringList) {
+        $this->matrix = array_map(
+            fn($str) => str_split($str, 1),
+            $stringList
+        );
     }
 
-    private function getMostCommonBitAt(int $position, array $matrix): string {
+    public function powerConsumption(): int {
+        $mostcommonBits = implode('', $this->getMostCommonBits());
+
+        $gammaRate = bindec($mostcommonBits);
+        $epsilonRate = bindec($this->invertBits($mostcommonBits));
+
+        return $gammaRate * $epsilonRate;
+    }
+
+    public function lifeSupportRating(): int {
+        $oxygenGeneratorRating = $this->getRating($this->matrix, fn($str) => $str);
+        $co2ScrubberRating = $this->getRating($this->matrix, [$this, 'invertBits']);
+
+        return $oxygenGeneratorRating * $co2ScrubberRating;
+    }
+
+    private static function getMostCommonBitAt(array $matrix, int $position): string {
         $count0 = 0;
         $count1 = 0;
 
@@ -37,23 +53,23 @@ class Day3 extends Day0 {
         if ($count0 > $count1) {
             return '0';
         } else {
-            return '1'; // also if count1 == count0, because the puzzle (part 2) expects this
+            return '1'; // also if count1 == count0, but the puzzle (part 2) expects this
         }
 
     }
 
-    private function getMostCommonBits(array $matrix): array {
-        $mostCommonBits= [];
+    private function getMostCommonBits(): array {
+        $result = [];
 
-        for($i=0; $i<sizeof($matrix[0]); ++$i) {
-            $mostCommonBits[]= $this->getMostCommonBitAt($i, $matrix);
+        for($i = 0; $i < sizeof($this->matrix[0]); ++$i) {
+            $result[] = $this->getMostCommonBitAt($this->matrix, $i);
         }
 
-        return $mostCommonBits;
+        return $result;
     }
 
-    private function invertBits(string $str): string {
-        $result = "";
+    private static function invertBits(string $str): string {
+        $result = '';
 
         foreach (str_split($str, 1) as $chr) {
             switch ($chr) {
@@ -73,15 +89,6 @@ class Day3 extends Day0 {
         return $result;
     }
 
-    private function powerConsumption(array $matrix): int {
-        $mostcommonBits = implode($this->getMostCommonBits($matrix));
-
-        $gammaRate = bindec($mostcommonBits);
-        $epsilonRate = bindec($this->invertBits($mostcommonBits));
-
-        return $gammaRate * $epsilonRate;
-    }
-
     private function filterMatrix(array $matrix, int $position, string $filter): array {
         $result = [];
 
@@ -96,29 +103,22 @@ class Day3 extends Day0 {
 
     private function getRating(array $matrix, $invertFunction): int {
         for ($i = 0; $i < sizeof($matrix[0]); ++$i) {
-            $findBit = $invertFunction($this->getMostCommonBitAt($i, $matrix));
+            $findBit = $invertFunction($this->getMostCommonBitAt($matrix, $i));
 
             $matrix = $this->filterMatrix($matrix, $i, $findBit);
 
             if (sizeof($matrix) === 1) {
-                return bindec(implode($matrix[0]));
+                return bindec(implode('', $matrix[0]));
             }
         }
 
         throw new \ErrorException('there are no lines left');
     }
+}
 
-    private function lifeSupportRating(array $matrix) {
-        $oxygenGeneratorRating = $this->getRating($matrix, fn($str) => $str);
-        $co2ScrubberRating = $this->getRating($matrix, [$this, 'invertBits']);
-
-        return $oxygenGeneratorRating * $co2ScrubberRating;
-    }
-
-
-
+class Day3 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $testInput = $this->readInput([
+        $testMatrix = new BinaryMatrix([
             '00100',
             '11110',
             '10110',
@@ -132,13 +132,13 @@ class Day3 extends Day0 {
             '00010',
             '01010'
         ]);
-        $this->addTest($this->powerConsumption($testInput), 198);
-        $this->addTest($this->lifeSupportRating($testInput), 230);
+        $this->addTest($testMatrix->powerConsumption(), 198);
+        $this->addTest($testMatrix->lifeSupportRating(), 230);
         
         
         
-        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
-        $this->addResult($this->powerConsumption($input), (int)$puzzle->part1);// 3549854
-        $this->addResult($this->lifeSupportRating($input), (int)$puzzle->part2);// 3765399
+        $matrix = new BinaryMatrix(explode(PHP_EOL, $puzzle->input));
+        $this->addResult($matrix->powerConsumption(), (int)$puzzle->part1);// 3549854
+        $this->addResult($matrix->lifeSupportRating(), (int)$puzzle->part2);// 3765399
     }
 }

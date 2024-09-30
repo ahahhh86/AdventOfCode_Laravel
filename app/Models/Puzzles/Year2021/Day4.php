@@ -5,132 +5,123 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
-class Day4 extends Day0 {
-    private function readInput(array $stringList): array {
-        $result = [];
-        $result['numbers'] = explode(",", $stringList[0]);
-        $result['boards'] = [];
-        $boardNum=0;
-    
-        for($i=2; $i < sizeof($stringList); ++$i) {// no foreach, because the first two lines should be skipped
-            if ($stringList[$i] === "") {
-                ++$boardNum;
-                $result['boards'][$boardNum] = [];
-                continue;
-            }
-    
-            // small numbers are filled with spaces (' 7'), but every array should have  the same size, so empty arrays nedd to be skipped
-            $result['boards'][$boardNum][] = preg_split(pattern: '/[\s]+/', subject: $stringList[$i], flags: PREG_SPLIT_NO_EMPTY);
-        }
-    
-        return $result;
-    }
-    
-    private function areAllElementsTrue(array $array): bool {
-        $allElementsSame = count(array_unique($array)) === 1;
-        return $allElementsSame && $array[0];
-    }
-    
-    private function isWonHorizontal(array $board): bool {
-        foreach($board as $line) {
-            if ($this->areAllElementsTrue($line)) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-    
-    private function flipBoard(array $board): array {
-        $result = [];
-    
-        for($i=0; $i < sizeof($board); ++$i) {
-            for($j=0; $j < sizeof($board[$i]); ++$j) {
-                $result[$i][$j] = $board[$j][$i];
-            }
-        }
-    
-        return $result;
-    }
-    
-    function isWon(array $board): bool {
-        return
-            $this->isWonHorizontal($board) ||
-            $this->isWonHorizontal($this->flipBoard($board)); // aka isWonVertical
-    }
-    
-    private function createOneCheckBoard(array $board): array {
-        $result = [];
-    
-        foreach($board as $line) {
-            $result[] = array_fill(0, sizeof($line), false);
-        }
-    
-        return $result;
-    }
-    
-    private function createCheckBoards(array $board): array {
-        $result = [];
-    
-        foreach($board as $temp) {
-            $result[] = $this->createOneCheckBoard($temp);
-        }
-    
-        return $result;
-    }
-    
-    private function check(int $number, array $board, array &$check): void {
-        for($i=0; $i < sizeof($board); ++$i) {
-            for($j=0; $j < sizeof($board[$i]); ++$j) {
-                if ($board[$i][$j] == $number) {
-                    $check[$i][$j] = true;
-                }
-            }
-        }
-    }
-    
-    private function calculateScore(int $number, array $board, array $check): int {
-        $result = 0;
-    
-        for($i=0; $i < sizeof($board); ++$i) {
-            for($j=0; $j < sizeof($board[$i]); ++$j) {
-                if (!$check[$i][$j]) {
-                    $result += $board[$i][$j];
-                }
-            }
-        }
-    
-        $result *= $number;
-    
-        return $result;
+class Board {
+    private $board;
+    private $isWon = false;
+
+    public function __construct(array $board) {
+        $this->board = $board;
+        array_walk_recursive($this->board, fn(&$x) => $x = ['num' => (int) $x, 'check' => false]);
     }
 
-    private function playBingo(array $input, bool $firstWin = false): int {
-        $checkBoards = $this->createCheckBoards($input['boards']);
-        $boardsWon = array_fill(0, sizeof($checkBoards), false);
-    
-        foreach($input['numbers'] as $number) {
-            for($i=0; $i < sizeof($input['boards']); ++$i) {
-                if ($boardsWon[$i]) {continue;}
-    
-                $this->check($number, $input['boards'][$i], $checkBoards[$i]);
-                
-                if ($this->isWon($checkBoards[$i])) {
-                    $boardsWon[$i] = true;
-                    if ($firstWin || $this->areAllElementsTrue($boardsWon)) {
-                        return $this->calculateScore($number, $input['boards'][$i], $checkBoards[$i]);
+    private static function isLineChecked(array $line): bool {
+        return array_reduce(
+            $line,
+            fn($acc, $item): bool => $acc && $item['check'],
+            true
+        );
+    }
+
+    private static function isWonHorizontal(array $board): bool {
+        return array_reduce(
+            $board,
+            fn($acc, $line): bool => $acc || self::isLineChecked(line: $line),
+            false
+        );
+    }
+
+    private static function transpose(array $board): array {
+        return array_map(null, ...$board);
+    }
+
+    public function isWon(): bool {
+        return $this->isWon;
+    }
+
+    public function setMarker(int $number): void {
+        array_walk($this->board, function(&$line) use ($number): void{
+            array_walk($line, function(&$item) use ($number): void {
+                if ($item['num'] === $number) {
+                    $item['check'] = true;
+                }
+            });
+        });
+
+        $this->isWon =
+            self::isWonHorizontal($this->board) ||
+            self::isWonHorizontal(self::transpose($this->board)); // aka isWonVertical
+    }
+
+    public function calculateScore(int $number): int {
+        $result = 0;
+
+        array_walk($this->board, function($line) use (&$result): void{
+            array_walk($line, function($item) use (&$result): void {
+                        if (!$item['check']) {
+                            $result += $item['num'];
+                        }
+            });
+        });
+
+        $result *= $number;
+
+        return $result;
+    }
+}
+
+class Bingo {
+    private $numbers;
+    private $numberIndex = 0;
+    private $boards;
+    private $boardsWon = 0;
+
+    public function __construct(array $stringList) {
+        $this->numbers = explode(',', $stringList[0]);
+
+        array_splice($stringList, 0, 2);
+        $boards = [];
+        $boardNum=0;
+
+        foreach($stringList as $str) {
+            if ($str === "") {
+                ++$boardNum;
+                $boards[$boardNum] = [];
+                continue;
+            }
+
+            // small numbers are filled with spaces (' 7'), but every array should have  the same size, so empty arrays nedd to be skipped
+            $boards[$boardNum][] = preg_split(pattern: '/[\s]+/', subject: $str, flags: PREG_SPLIT_NO_EMPTY);
+        }
+        $this->boards = array_map(fn($board) => new Board($board), $boards);
+    }
+
+    public function play(bool $firstWin = false): int {
+        // numberIndex used to save the work done in part1 and do not repeat it in part2
+        for(; $this->numberIndex < sizeof($this->numbers); ++$this->numberIndex) {
+            $number = $this->numbers[$this->numberIndex];
+
+            foreach($this->boards as $board) {
+                if ($board->isWon()) {continue;}
+
+                $board->setMarker($number);
+
+                if ($board->isWon()) {
+                    ++$this->boardsWon;
+                    if ($firstWin || $this->boardsWon === sizeof($this->boards)) {
+                        ++$this->numberIndex; // otherwise numberIndex will be called in part1 and part2 with the same value
+                        return $board->calculateScore($number);
                     }
                 }
             }
         }
-    
+
         throw new \ErrorException('not each board has won');
     }
+}
 
-
-
+class Day4 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $testInput = $this->readInput([
+        $testBingo = new Bingo([
             '7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1',
             '',
             '22 13 17 11  0',
@@ -151,13 +142,13 @@ class Day4 extends Day0 {
             '22 11 13  6  5',
             ' 2  0 12  3  7'
         ]);
-        $this->addTest($this->playBingo($testInput, true), 4512);
-        $this->addTest($this->playBingo($testInput), 1924);
+        $this->addTest($testBingo->play( true), 4512);
+        $this->addTest($testBingo->play(), 1924);
 
 
 
-        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
-        $this->addResult($this->playBingo($input, true), (int)$puzzle->part1); // 33348
-        $this->addResult($this->playBingo($input), (int)$puzzle->part2); // 8112
+        $bingo = new Bingo(explode(PHP_EOL, $puzzle->input));
+        $this->addResult($bingo->play( true), (int)$puzzle->part1); // 33348
+        $this->addResult($bingo->play(), (int)$puzzle->part2); // 8112
     }
 }

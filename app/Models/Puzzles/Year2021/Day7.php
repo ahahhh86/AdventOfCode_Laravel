@@ -5,66 +5,61 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
-class Day7 extends Day0 {
-    private function readInput(string $str): array {
-        $result = [];
+class CrabSubmarines {
+    private $subPosition = [];
+
+    public function __construct(string $str) {
         $arr = explode(",", $str);
-
-        foreach($arr as $item) {
-            $result[] = (int) $item;
-        }
-
-        return $result;
+        $this->subPosition = array_map(fn($i): int => (int)$i, $arr);
     }
 
-    private function accumulateFuelAt(Array $subs, int $position, callable $fn): int {
-        $result = 0;
-    
-        foreach($subs as $sub) {
-            $result += $fn($sub, $position);
-        }
-    
-        return $result;
+    public function accumulateFuelAt(int $position, $fn): int {
+        return array_reduce($this->subPosition, fn($acc, $item): int => $acc + $fn($item, $position));
     }
 
-    private function getMinFuel(Array $subs, callable $fn): int {
+    public function getMinFuel($fn): int {
         $result = PHP_INT_MAX;
-        $max = max($subs);
+        $max = max($this->subPosition);
 
-        for ($i = min($subs); $i <= $max; ++$i) {
-            $result = min($result, $this->accumulateFuelAt($subs, $i, $fn));
+        for ($i = min($this->subPosition); $i <= $max; ++$i) {
+            $result = min($result, $this->accumulateFuelAt($i, $fn));
         }
 
         return $result;
     }
 
-    private function calculateFuelPart1(int $a, int $b): int {
+    public static function calculateFuelPart1(int $a, int $b): int {
         return abs($a - $b);
     }
 
-    private function calculateFuelPart2(int $a, int $b): int {
+    public static function calculateFuelPart2(int $a, int $b): int {
         $n = abs($a - $b);
         return (int) ($n*($n+1)/2);
     }
+}
 
-
-
+class Day7 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $testInput = $this->readInput('16,1,2,0,4,2,7,1,2,14');
-        $this->addTest($this->accumulateFuelAt($testInput, 1, [$this, 'calculateFuelPart1']), 41);
-        $this->addTest($this->accumulateFuelAt($testInput, 2, [$this, 'calculateFuelPart1']), 37);
-        $this->addTest($this->accumulateFuelAt($testInput, 3, [$this, 'calculateFuelPart1']), 39);
-        $this->addTest($this->accumulateFuelAt($testInput, 10,[$this, 'calculateFuelPart1']), 71);
-        $this->addTest($this->getMinFuel($testInput, [$this, 'calculateFuelPart1']), 37);
-
-        $this->addTest($this->accumulateFuelAt($testInput, 2, [$this, 'calculateFuelPart2']), 206);
-        $this->addTest($this->accumulateFuelAt($testInput, 5, [$this, 'calculateFuelPart2']), 168);
-        $this->addTest($this->getMinFuel($testInput, [$this, 'calculateFuelPart2']), 168);
+        $calculateFuelPart1 = fn($a, $b): int => CrabSubmarines::calculateFuelPart1($a, $b);
+        $calculateFuelPart2 = fn($a, $b): int => CrabSubmarines::calculateFuelPart2($a, $b);
 
 
 
-        $input = $this->readInput($puzzle->input);
-        $this->addResult($this->getMinFuel($input, [$this, 'calculateFuelPart1']), (int)$puzzle->part1); // 326132
-        $this->addResult($this->getMinFuel($input, [$this, 'calculateFuelPart2']), (int)$puzzle->part2); // 88612508
+        $testSubs = new CrabSubmarines('16,1,2,0,4,2,7,1,2,14');
+        $this->addTest($testSubs->accumulateFuelAt(2, $calculateFuelPart1), 37);
+        $this->addTest($testSubs->accumulateFuelAt(1, $calculateFuelPart1), 41);
+        $this->addTest($testSubs->accumulateFuelAt(3, $calculateFuelPart1), 39);
+        $this->addTest($testSubs->accumulateFuelAt(10,$calculateFuelPart1), 71);
+        $this->addTest($testSubs->getMinFuel($calculateFuelPart1), 37);
+
+        $this->addTest($testSubs->accumulateFuelAt(5, $calculateFuelPart2), 168);
+        $this->addTest($testSubs->accumulateFuelAt(2, $calculateFuelPart2), 206);
+        $this->addTest($testSubs->getMinFuel($calculateFuelPart2), 168);
+
+
+
+        $Subs = new CrabSubmarines($puzzle->input);
+        $this->addResult($Subs->getMinFuel($calculateFuelPart1), (int)$puzzle->part1); // 326132
+        $this->addResult($Subs->getMinFuel($calculateFuelPart2), (int)$puzzle->part2); // 88612508
     }
 }

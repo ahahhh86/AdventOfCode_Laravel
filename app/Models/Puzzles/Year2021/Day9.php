@@ -4,35 +4,24 @@ namespace App\Models\Puzzles\Year2021;
 
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
+use App\Models\Puzzles\Position;
 
-class Position {
-    public $x = 0;
-    public $y = 0;
 
-    public function __construct(int $x, int $y) {
-        $this->x = $x;
-        $this->y = $y;
-    }
-
-    public function __toString(): string
-    {
-        return "$this->x : $this->y";
-    }
-}
 
 class Map {
+    private const LARGES_BASINS_COUNT = 3;
     private $map = [];
     private $lowPoints = [];
     private const MAX_HEIGHT = 9;
 
-    public function __construct(array $arr) {
-        foreach($arr as $line) {
-            $buffer = [];
-            foreach(str_split($line, 1) as $item) {
-                $buffer[] = (int)$item; 
-            }
-            $this->map[] = $buffer;
-        }
+    public function __construct(array $heightMap) {
+        $this->map = array_map(
+            function($stringHeights): array {
+                $charHeights = str_split($stringHeights, 1);
+                return array_map(fn($height) => (int)$height, $charHeights);
+            },
+            $heightMap
+        );
     }
 
     public function calculateRisks(): int {
@@ -51,8 +40,7 @@ class Map {
     }
 
     public function multiplyBasins(): int {
-        $basins = $this->get3BiggestBasins();
-        return $basins[0] * $basins[1] * $basins[2];
+        return array_product($this->get3BiggestBasins());
     }
 
     private function checkMin(Position $position): bool {
@@ -62,28 +50,34 @@ class Map {
                 $heights[] = $this->map[$position->x + $i][$position->y + $j] ?? PHP_INT_MAX;
             }
         }
-        $min = min($heights);
 
-        return $this->map[$position->x][$position->y] === $min;
+        return $this->map[$position->x][$position->y] === min($heights);
     }
 
     private function getBasinPositions(Position $pos): array {
-        $directions = [[-1, 0], [+1, 0], [0, -1], [0, +1]];
+        $directions = [
+            new Position(-1, 0),
+            new Position(+1, 0),
+            new Position(0, -1),
+            new Position(0, +1)
+        ];
         $height = $this->map[$pos->x][$pos->y];
-
         $result = [$pos];
 
-        foreach($directions as $direction) {
-            $adjacentPos = new Position(
-                $pos->x + $direction[0],
-                $pos->y + $direction[1]
-            );
-            $adjacentHeight = $this->map[$adjacentPos->x][$adjacentPos->y] ?? $this::MAX_HEIGHT;
+        array_walk(
+            $directions,
+            function($direction) use($pos, $height, &$result): void {
+                $adjacentPos = new Position(
+                    $pos->x + $direction->x,
+                    $pos->y + $direction->y
+                );
+                $adjacentHeight = $this->map[$adjacentPos->x][$adjacentPos->y] ?? $this::MAX_HEIGHT;
 
-            if ($adjacentHeight > $height && $adjacentHeight < $this::MAX_HEIGHT) {
-                $result = array_merge($result, $this->getBasinPositions($adjacentPos));
+                if ($adjacentHeight > $height && $adjacentHeight < $this::MAX_HEIGHT) {
+                    $result = array_merge($result, $this->getBasinPositions($adjacentPos));
+                }
             }
-        }
+        );
 
         return $result;
     }
@@ -93,20 +87,13 @@ class Map {
     }
 
     private function getBasinSizes(): array {
-        $result = [];
-
-        foreach($this->lowPoints as $lowPoint) {
-            $size = $this->getBasinSize($lowPoint);
-            $result[] = $size;
-        }
-
-        return $result;
+        return array_map(fn($lowPoint): int => $this->getBasinSize($lowPoint), $this->lowPoints);
     }
 
     private function get3BiggestBasins(): array {
         $basins = $this->getBasinSizes();
         rsort($basins);
-        return [$basins[0], $basins[1], $basins[2]];
+        return array_splice($basins, 0, self::LARGES_BASINS_COUNT);
     }
 }
 

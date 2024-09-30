@@ -5,61 +5,70 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
-class Day8 extends Day0 {
-    private function createPattern(string $str): array {
-        $result = [];
-        $digits = explode(" ",$str);
+class Display {
+    public $patterns;
+    public $outputs;
+    private $identified = [];
 
-        foreach($digits as $digit) {
-            $segments = str_split($digit, 1);
-            sort($segments); // makes it easier to find matching digits, otherwise the order of segments is random
-            $result[] = implode('', $segments);
-        }
-
-        return $result;
+    public function __construct(string $str) {
+        [$patterns, $outputs] = explode(" | ", $str);
+        $this->patterns = self::createPatterns($patterns);
+        $this->outputs = self::createPatterns($outputs);
     }
 
-    private function readInput(array $arr): array {
-        $result = [];
-
-        foreach($arr as $line) {
-            [$patterns, $output] = explode(" | ", $line);
-            $result[] = ['patterns' => $this->createPattern($patterns), 'output' => $this->createPattern($output)];
-        }
-
-        return $result;
-    }
-
-
-
-    private function countDigits1478(array $notes): int {// TODO: make nicer or use function form part 2
-        $SEGMENTS_1 = 2;
-        $SEGMENTS_4 = 4;
-        $SEGMENTS_7 = 3;
-        $SEGMENTS_8 = 7;
+    public function count1478(): int {
+        $this->identified = [];
+        $this->identify1478();
 
         $result = 0;
 
-        foreach($notes as $line) {
-            foreach($line['output'] as $digit) {
-                switch (strlen($digit)) {
-                    case $SEGMENTS_1:
-                    case $SEGMENTS_4:
-                    case $SEGMENTS_7:
-                    case $SEGMENTS_8:
-                        ++$result;
+        array_walk(
+            $this->outputs,
+            function($output) use (&$result): void {
+                if (in_array($output, $this->identified)) {
+                    ++$result;
                 }
             }
-        }
+        );
 
         return $result;
     }
 
+    public function calculateOutputNumber(): int {
+        $this->identifyNumbers();
+
+        $result = array_reduce(
+            $this->outputs,
+            function($acc, $output): string {
+                return $acc . array_keys($this->identified, $output)[0];
+            },
+            ''
+        );
+
+        if (strlen($result) !== 4) {
+            throw new \ErrorException('could not find correct output');
+        }
+
+        return (int) $result;
+    }
 
 
-    private function isInDigit(string $pattern, string $digit): bool {
-        foreach(str_split($pattern, 1) as $letter) {
-            if (!str_contains($digit, $letter)) {
+
+    private static function createPatterns(string $str): array {
+        $digits = explode(' ',$str);
+
+        return array_map(
+            function($digit): string {
+                    $segments = str_split($digit, 1);
+                    sort($segments); // makes it easier to find matching digits, otherwise the order of segments is random
+                    return implode('', $segments);},
+            $digits
+        );
+    }
+
+    private static function isInDigit(string $pattern, string $digit): bool {
+        foreach(str_split($pattern, 1) as $segment) {
+            if (!str_contains($digit, $segment)) {
                 return false;
             }
         }
@@ -67,120 +76,116 @@ class Day8 extends Day0 {
         return true;
     }
 
-    private function reduceDigit(string $digit, string $subtract): string {
-        $result = '';
-
-        foreach(str_split($digit, 1) as $letter) {
-            if (!str_contains($subtract, $letter)) {
-                $result .= $letter;
-            }
-        }
-
-        return $result;
+    private static function reduceDigit(string $digit, string $subtract): string {
+        $segments = str_split($digit, 1);
+        return array_reduce(
+            $segments,
+            function($acc, $segment) use ($subtract): string {
+                    return str_contains($subtract, $segment) ? $acc : $acc . $segment;
+            },
+            ''
+        );
     }
 
-    private function identify1478(array $patterns): array {
-        $result = [];
-
-        foreach($patterns as $pattern) {
-            switch(strlen($pattern)) {
-                case 2:
-                    $result[1] = $pattern;
-                    break;
-                case 4:
-                    $result[4] = $pattern;
-                    break;
-                case 3:
-                    $result[7] = $pattern;
-                    break;
-                case 7:
-                    $result[8] = $pattern;
-                    break;
+    private function identify1478(): void {
+        if (sizeof($this->identified) === 4) {return ;}
+        $this->identified = [];
+    
+        array_walk(
+            $this->patterns,
+            function($pattern): void {
+                switch(strlen($pattern)) {
+                    case 2:
+                        $this->identified[1] = $pattern;
+                        break;
+                    case 4:
+                        $this->identified[4] = $pattern;
+                        break;
+                    case 3:
+                        $this->identified[7] = $pattern;
+                        break;
+                    case 7:
+                        $this->identified[8] = $pattern;
+                        break;
+                }
             }
-        }
+        );
 
-        if (sizeof($result) !== 4) {
+        if (sizeof($this->identified) !== 4) {
             throw new \ErrorException('could not find all numbers');
         }
-
-        return $result;
     }
 
-    private function identifyNumbers(array $digits): array {
+    private function identifyNumbers(): void {
+        if (sizeof($this->identified) === 10) {return ;}
+
+        $this->identify1478();
+
         $patternLength069 = 6;
         $patternLength235 = 5;
-        $result = $this->identify1478($digits);
-        $reduced4By1 = $this->reduceDigit($result[4], $result[1]);
+        $reduced4By1 = self::reduceDigit($this->identified[4], $this->identified[1]);
 
-        foreach($digits as $digit) {
+        foreach($this->patterns as $digit) {//TODO: refactor split into smaller methods
             // identify 0, 6 or 9?
             if (strlen($digit) === $patternLength069) {
-                if ($this->isInDigit($result[1], $digit)) {
-                    if ($this->isInDigit($result[4], $digit)) {
-                        $result[9] = $digit;
+                if (self::isInDigit($this->identified[1], $digit)) {
+                    if (self::isInDigit($this->identified[4], $digit)) {
+                        $this->identified[9] = $digit;
                     } else {
-                        $result[0] = $digit;
+                        $this->identified[0] = $digit;
                     }
                 } else {
-                    $result[6] = $digit;
+                    $this->identified[6] = $digit;
                 }
 
             // identify 2, 3 or 5?
             } else if (strlen($digit) === $patternLength235) {
-                if ($this->isInDigit($result[1], $digit)) {
-                    $result[3] = $digit;
+                if (self::isInDigit($this->identified[1], $digit)) {
+                    $this->identified[3] = $digit;
                 } else {
-                    if ($this->isInDigit($reduced4By1, $digit)) {
-                        $result[5] = $digit;
+                    if (self::isInDigit($reduced4By1, $digit)) {
+                        $this->identified[5] = $digit;
                     } else {
-                        $result[2] = $digit;
+                        $this->identified[2] = $digit;
                     }
                 }
             }
         }
 
-        if (sizeof($result) !== 10) {
+        if (sizeof($this->identified) !== 10) {
             throw new \ErrorException('could not find all numbers');
         }
+    }
+}
 
-        return $result;
+class Displays {
+    private $displays = [];
+
+    public function __construct(array $stringList) {
+        $this->displays = array_map(
+            fn($line): Display => new Display($line),
+            $stringList
+        );
     }
 
-    private function calculateOutputNumber(array $note): int {
-        $identified = $this->identifyNumbers($note['patterns']);
-
-        $result = "";
-
-        foreach($note['output'] as $output) {
-            foreach($identified as $key => $value) {
-                if ($output === $value) {
-                    $result .= $key;
-                    break;
-                }
-            }
-        }
-
-        if (strlen($result) !== 4) {
-            throw new \ErrorException('could not find correct output');
-        }
-
-        return (int)$result;
+    public function countDigits1478(): int {
+        return array_reduce(
+            $this->displays,
+            fn($acc, $display) => $acc + $display->count1478()
+        );
     }
 
-    private function accumulateDigits(array $notes): int {
-        $result = 0;
-
-        foreach($notes as $note) {
-            $result += $this->calculateOutputNumber($note);
-        }
-
-        return $result;
+    public function accumulateDigits(): int {
+        return array_reduce(
+            $this->displays,
+            fn($acc, $display): int => $acc + $display->calculateOutputNumber()
+        );
     }
+}
 
-
-
+class Day8 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $testInput = $this->readInput([
+        $testDisplays = new Displays([
             'be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe',
             'edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc',
             'fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg',
@@ -192,15 +197,15 @@ class Day8 extends Day0 {
             'egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb',
             'gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce'
         ]);
-        $testInput2 = $this->readInput(['acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf']);
-        $this->addTest($this->countDigits1478($testInput), 26);
-        $this->addTest($this->accumulateDigits($testInput2), 5353);
-        $this->addTest($this->accumulateDigits($testInput), 61229);
+        $testDisplays2 = new Displays(['acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf']);
+        $this->addTest($testDisplays->countDigits1478(), 26);
+        $this->addTest($testDisplays2->accumulateDigits(), 5353);
+        $this->addTest($testDisplays->accumulateDigits(), 61229);
 
 
 
-        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
-        $this->addResult($this->countDigits1478($input), (int)$puzzle->part1); // 261
-        $this->addResult($this->accumulateDigits($input), (int)$puzzle->part2); // x
+        $displays = new Displays(explode(PHP_EOL, $puzzle->input));
+        $this->addResult($displays->countDigits1478(), (int)$puzzle->part1); // 261
+        $this->addResult($displays->accumulateDigits(), (int)$puzzle->part2); // 987553
     }
 }

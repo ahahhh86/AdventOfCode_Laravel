@@ -1,80 +1,56 @@
 <?php
 
-
-
 namespace App\Models\Puzzles\Year2021;
 
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
-class Day2 extends Day0 {
-    private function readInput(array $strList): array {
-        $result = [];
-    
-        foreach($strList as $str) {
-            $item = explode(" ", $str);
-            $result[] = ['direction' => $item[0], 'value' => (int)$item[1]];
-        }
-    
-        return $result;
-    }
-    
-    private function navigate(array $instructions): int {
-        $horizontalPos = 0;
-        $depth = 0;
-    
-        foreach($instructions as $instruction) {
-            switch ($instruction['direction']) {
-                case 'forward':
-                    $horizontalPos += $instruction['value'];
-                    break;
-    
-                case 'down':
-                    $depth += $instruction['value'];
-                    break;
-    
-                case 'up':
-                    $depth -= $instruction['value'];
-                    break;
-                
-                default:
-                    throw new \ErrorException("unexpected input: {$instruction['direction']}");
-            }
-        }
-    
-        return $horizontalPos * $depth;
-    } 
-    
-    private function navigate2(array $instructions): int {
-        $horizontalPos = 0;
-        $depth = 0;
-        $aim = 0;
-    
-        foreach($instructions as $instruction) {
-            switch ($instruction['direction']) {
-                case 'forward':
-                    $horizontalPos += $instruction['value'] * $aim;
-                    $depth += $instruction['value'];
-                    break;
-    
-                case 'down':
-                    $aim += $instruction['value'];
-                    break;
-    
-                case 'up':
-                    $aim -= $instruction['value'];
-                    break;
-                
-                default:
-                    throw new \ErrorException("unexpected input: {$instruction['direction']}");
-            }
-        }
-    
-        return $horizontalPos * $depth;
+class Submarine {
+    private $commands;
+
+    public function __construct(array $stringList) {
+        $this->commands = array_map(
+            function($str): array {
+                $command = explode(" ", $str);
+                return ['direction' => $command[0], 'value' => (int) $command[1]];
+            },
+             $stringList
+        );
     }
 
+    public function navigate(bool $part2 = false): int {
+        $horizontalPos = 0;
+        $depth = 0;
+        $aim = $part2 ? 0 : 1;
+        $targetUpDown = &${$part2 ? 'aim' : 'depth'};
+
+        foreach($this->commands as $command) {
+            switch ($command['direction']) {
+                case 'forward':
+                    $horizontalPos += $command['value'] * $aim;
+                    if ($part2) {$depth += $command['value'];}
+                    break;
+
+                case 'down':
+                    $targetUpDown += $command['value'];
+                    break;
+
+                case 'up':
+                    $targetUpDown -= $command['value'];
+                    break;
+
+                default:
+                    throw new \ErrorException("unexpected input: {$command['direction']}");
+            }
+        }
+
+        return $horizontalPos * $depth;
+    }
+}
+
+class Day2 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $testInput = $this->readInput([
+        $testSub = new Submarine([
             'forward 5',
             'down 5',
             'forward 8',
@@ -82,13 +58,13 @@ class Day2 extends Day0 {
             'down 8',
             'forward 2'
         ]);
-        $this->addTest($this->navigate($testInput), 150);
-        $this->addTest($this->navigate2($testInput), 900);
-        
-        
-        
-        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
-        $this->addResult($this->navigate($input), (int)$puzzle->part1);// 1882980
-        $this->addResult($this->navigate2($input), (int)$puzzle->part2);// 1971232560
+        $this->addTest($testSub->navigate(), 150);
+        $this->addTest($testSub->navigate(true), 900);
+
+
+
+        $sub = new Submarine(explode(PHP_EOL, $puzzle->input));
+        $this->addResult($sub->navigate(), (int)$puzzle->part1);// 1882980
+        $this->addResult($sub->navigate(true), (int)$puzzle->part2);// 1971232560
     }
 }

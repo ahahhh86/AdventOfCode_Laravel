@@ -5,22 +5,34 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
-class Day1 extends Day0 {
-    private const COUNT_AVERAGE_OF = 3;
+class OceanFloor {
+    private $floor;
+    private const AVERAGE_COUNT = 3;
 
+    public function __construct(array $stringList) {
+        $this->floor = array_map(
+            fn($str): int => (int) $str,
+             $stringList
+        );
+    }
 
-
-    private function readInput(array $strList): array {
-        $result = [];
-    
-        foreach($strList as $line) {
-            $result[] = (int) $line;
-        }
-    
-        return $result;
+    public function countDeeper(): int {
+        return $this::countIfNextBigger($this->floor);
     }
     
-    private function countIfNextBigger(array $arr): int {
+    public function countDeeperAverage(): int {
+        $sumArray = []; // if sum or average does not matter for comparison, but sum needs less operations
+
+        for($i = 0; $i <= (sizeof($this->floor) - $this::AVERAGE_COUNT); ++$i) {
+            $sumArray[] = array_sum(array_slice( $this->floor, $i, $this::AVERAGE_COUNT));
+        }
+    
+        return $this::countIfNextBigger($sumArray);
+    }
+
+
+
+    private static function countIfNextBigger(array $arr): int {
         $result = 0;
         
         for($i = 1; $i < sizeof($arr); ++$i) {
@@ -31,19 +43,11 @@ class Day1 extends Day0 {
     
         return $result;
     }
-    
-    private function countIfBiggerAverage(array $arr): int {
-        $sumArray = []; // if sum or average does not matter for comparison, but sum needs less operations
-    
-        for($i = 0; $i <= (sizeof($arr) - $this::COUNT_AVERAGE_OF); ++$i) {
-            $sumArray[] = array_sum(array_slice($arr, $i, $this::COUNT_AVERAGE_OF));
-        }
-    
-        return $this->countIfNextBigger($sumArray);
-    }
+}
 
+class Day1 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $testInput = $this->readInput([
+        $testFloor = new OceanFloor([
             '199',
             '200',
             '208',
@@ -55,13 +59,13 @@ class Day1 extends Day0 {
             '260',
             '263'
         ]);
-        $this->addTest($this->countIfNextBigger($testInput), 7);
-        $this->addTest($this->countIfBiggerAverage($testInput), 5);
+        $this->addTest($testFloor->countDeeper(), 7);
+        $this->addTest($testFloor->countDeeperAverage(), 5);
 
 
 
-        $input = $this->readInput(explode(PHP_EOL, $puzzle->input));
-        $this->addResult($this->countIfNextBigger($input), (int)$puzzle->part1);// 1759
-        $this->addResult($this->countIfBiggerAverage($input), (int)$puzzle->part2);// 1805
+        $floor = new OceanFloor(explode(PHP_EOL, $puzzle->input));
+        $this->addResult($floor->countDeeper(), (int)$puzzle->part1);// 1759
+        $this->addResult($floor->countDeeperAverage(), (int)$puzzle->part2);// 1805
     }
 }
