@@ -35,8 +35,9 @@ class Map {
 
         for($i = 0; $i < sizeof($this->map); ++$i) {
             for($j = 0; $j < sizeof($this->map[$i]); ++$j) {
-                if ($this->checkMin(new Position($i, $j))) {
-                    $this->lowPoints[] = new Position($i, $j);
+                $newPosition = new Position($i, $j);
+                if ($this->checkMin($newPosition)) {
+                    $this->lowPoints[] = $newPosition;
                     $risks[] = $this->map[$i][$j] + 1;
                 }
             }
@@ -95,7 +96,10 @@ class Map {
     }
 
     private function getBasinSizes(): array {
-        return array_map(fn($lowPoint): int => $this->getBasinSize($lowPoint), $this->lowPoints);
+        return array_map(
+            fn($lowPoint): int => $this->getBasinSize($lowPoint),
+            $this->lowPoints
+        );
     }
 
     private function get3BiggestBasins(): array {

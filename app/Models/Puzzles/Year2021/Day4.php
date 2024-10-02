@@ -17,19 +17,14 @@ class Number {
         $this->number = $number;
     }
 
-    public function getNumber(): int {
-        return $this->number;
-    }
-
     public function getScore(): int {
         return $this->checked ? 0 : $this->number;
     }
 
-    public function check(int $number): bool {
+    public function check(int $number): void {
         if ($number === $this->number) {
             $this->checked = true;
         }
-        return $this->checked;
     }
 
     public function isChecked(): bool {
@@ -58,16 +53,15 @@ class Board {
     }
 
     public function setMarker(int $number): void {
-        $transpose = fn(array $board): array => array_map(null, ...$board);
-
         array_walk_recursive(
             $this->board,
-            fn(&$item): bool => $item->check($number)
+            fn(&$item) => $item->check($number)
         );
 
+        $transposed = array_map(null, ...$this->board);
         $this->isWon =
             self::isWonHorizontal($this->board) ||
-            self::isWonHorizontal($transpose($this->board)); // aka isWonVertical
+            self::isWonHorizontal($transposed); // aka isWonVertical
     }
 
     public function calculateScore(int $number): int {
@@ -82,13 +76,11 @@ class Board {
 
 
     private static function isWonHorizontal(array $board): bool {
-        $isLineChecked = function(array $line): bool {
-            return array_reduce(
-                $line,
-                fn($carry, $item): bool => $carry && $item->isChecked(),
-                true
-            );
-        };
+        $isLineChecked = fn(array $line): bool => array_reduce(
+            $line,
+            fn($carry, $item): bool => $carry && $item->isChecked(),
+            true
+        );
 
         return array_reduce(
             $board,
@@ -125,7 +117,10 @@ class Bingo {
             }
         );
 
-        $this->boards = array_map(fn($board) => new Board($board), $boards);
+        $this->boards = array_map(
+            fn($board): Board => new Board($board),
+            $boards
+        );
     }
 
     public function play(bool $firstWin = false): int {

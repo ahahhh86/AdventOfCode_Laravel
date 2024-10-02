@@ -111,8 +111,7 @@ class Submarine {
         );
     }
 
-    public function navigate(bool $part2 = false): int {
-        $subPos = $part2 ? new SubPosition2() : new SubPosition();
+    public function navigate(SubPosition $subPos): int {
         return $subPos->go($this->commands);
     }
 }
@@ -129,13 +128,13 @@ class Day2 extends Day0 {
             'down 8',
             'forward 2'
         ]);
-        $this->addTest($testSub->navigate(), 150);
-        $this->addTest($testSub->navigate(true), 900);
+        $this->addTest($testSub->navigate(new SubPosition()), 150);
+        $this->addTest($testSub->navigate(new SubPosition2()), 900);
 
 
 
         $sub = new Submarine(explode(PHP_EOL, $puzzle->input));
-        $this->addResult($sub->navigate(), (int)$puzzle->part1);// 1882980
-        $this->addResult($sub->navigate(true), (int)$puzzle->part2);// 1971232560
+        $this->addResult($sub->navigate(new SubPosition()), (int)$puzzle->part1);// 1882980
+        $this->addResult($sub->navigate(new SubPosition2()), (int)$puzzle->part2);// 1971232560
     }
 }

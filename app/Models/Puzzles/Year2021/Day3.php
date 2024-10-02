@@ -14,12 +14,7 @@ class BinaryMatrix {
 
     public function __construct(array $stringList) {
         $this->matrix = array_map(
-            function($str): array {
-                if (!preg_match('/[01]/', $str)) {
-                    throw new \ErrorException("unexpected input: {$str}");
-                }
-                return str_split($str, 1);
-            },
+            fn($str): array => str_split($str, 1),
             $stringList
         );
     }
@@ -43,19 +38,12 @@ class BinaryMatrix {
 
 
     private static function getMostCommonBitAt(array $matrix, int $position): string {
-        $count = [0, 0];
-
-        array_walk(
-            $matrix,
-            function($line) use($position, &$count): void {
-                ++$count[$line[$position]];
-            }
-        );
-
+        $count = array_count_values(array_column($matrix, $position));
+        $count = [$count[0] ?? 0, $count[1] ?? 0];  // Just in case there are only '0' or only '1'
         return ($count[0] > $count[1]) ? '0' : '1'; // returns 1 also if count1 == count0, but the puzzle (part 2) expects this
     }
 
-    private function getMostCommonBits(): array { // TODO: try with array_column
+    private function getMostCommonBits(): array {
         $result = [];
 
         for($i = 0; $i < sizeof($this->matrix[0]); ++$i) {

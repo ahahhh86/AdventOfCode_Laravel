@@ -4,7 +4,6 @@ namespace App\Models\Puzzles\Year2021;
 
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
-use App\Models\Puzzles\MyArray;
 use App\Models\Puzzles\Position;
 
 
@@ -17,13 +16,13 @@ class VentLine {
 
     public function __construct(string $str) {
         $buffer = preg_split("/[\s,]+/", $str);
-        $vents = ['from' => new Position((int)$buffer[0], (int)$buffer[1]), 'to' => new Position((int)$buffer[3], (int)$buffer[4])];
+        $vents = ['from' => new Position($buffer[0], $buffer[1]), 'to' => new Position($buffer[3], $buffer[4])];
 
         $xStep = $vents['to']->x <=> $vents['from']->x;
         $yStep = $vents['to']->y <=> $vents['from']->y;
 
         $axis = ($yStep === 0) ? 'x' : 'y';
-        $countSteps = abs($vents['to']->$axis - $vents['from']->$axis);
+        $countSteps = abs($vents['to']->$axis - $vents['from']->$axis); // aka $vent[]->x or $vent[]->y
         if ($yStep !== 0 && $xStep !== 0) {
             $this->isDiagonal = true;
         }
@@ -100,10 +99,10 @@ class Map {
     }
 
     private function countCrossings(array $map): int{
-        return MyArray::count_if(
-                array_merge(...$map),
-                fn($item): bool => $item > 1
-        );
+        return count(array_filter(
+            array_merge(...$map),
+            fn($item): bool => $item > 1
+        ));
     }
 }
 

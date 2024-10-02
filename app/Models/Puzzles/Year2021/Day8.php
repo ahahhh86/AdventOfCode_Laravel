@@ -4,14 +4,19 @@ namespace App\Models\Puzzles\Year2021;
 
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
-use App\Models\Puzzles\MyArray;
-
-
+use App\Models\Puzzles\Helper;
 
 class Display {
     private const COUNT_1478 = 4;
     private const COUNT_0_TO_9 = 10;
-    private const SEGMENT_COUNTS = ['1' => 2, '4' => 4, '7' => 3, '8' => 7, '069' => 6, '235' => 5];
+    private const SEGMENT_COUNTS = [
+        '1' => 2,
+        '4' => 4,
+        '7' => 3,
+        '8' => 7,
+        '069' => 6,
+        '235' => 5
+    ];
     private const OUTPUT_DIGITS_COUNT = 4;
 
     private $patterns;
@@ -30,18 +35,19 @@ class Display {
         $this->identified = [];
         $this->identify1478();
 
-        return MyArray::count_if(
+        return count(array_filter(
             $this->outputs,
             fn($output): bool => in_array($output, $this->identified)
-        );
+        ));
     }
 
     public function calculateOutputNumber(): int {
         $this->identifyNumbers();
+        $identifyValue = fn($value): string => array_keys($this->identified, $value)[0];
 
         $result = array_reduce(
             $this->outputs,
-            fn($carry, $output): string => $carry . array_keys($this->identified, $output)[0],
+            fn($carry, $output): string => $carry . $identifyValue($output),
             ''
         );
 
@@ -55,14 +61,10 @@ class Display {
 
 
     private static function createPatterns(string $str): array {
-        $digits = explode(' ',$str);
-
+        // sorting makes it easier to find matching digits, otherwise the order of segments is random
         return array_map(
-            function($digit): string {
-                    $segments = str_split($digit, 1);
-                    sort($segments); // makes it easier to find matching digits, otherwise the order of segments is random
-                    return implode('', $segments);},
-            $digits
+            fn($digit): string => Helper::sortString($digit),
+            explode(' ',$str)
         );
     }
 
@@ -77,10 +79,14 @@ class Display {
     }
 
     private static function reduceDigit(string $digit, string $subtract): string {
-        $segments = str_split($digit, 1);
+        $filteredSegments = array_filter(
+            str_split($digit, 1),
+            fn($chr): bool => !str_contains($subtract, $chr)
+        );
+
         return array_reduce(
-            $segments,
-            fn($carry, $segment): string => $carry . (str_contains($subtract, $segment) ?  '' : $segment),
+            $filteredSegments,
+            fn($carry, $segment): string => $carry . $segment,
             ''
         );
     }
@@ -88,7 +94,7 @@ class Display {
 
 
     private function identify1478(): void {
-        if (sizeof($this->identified) === self::COUNT_1478) {return ;}
+        if (count($this->identified) === self::COUNT_1478) {return ;}
         $this->identified = [];
 
         array_walk(
@@ -111,7 +117,7 @@ class Display {
             }
         );
 
-        if (sizeof($this->identified) !== self::COUNT_1478) {
+        if (count($this->identified) !== self::COUNT_1478) {
             throw new \ErrorException('could not find all numbers');
         }
     }

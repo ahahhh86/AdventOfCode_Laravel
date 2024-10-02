@@ -9,8 +9,8 @@ use App\Models\Puzzles\Day0;
 
 class Fishes {
     private const FISH_CREATION_DURATION = 6;
-    //private const NEW_FISH_CREATION_DURATION = 8;
-    private const FISH_ARRAY_LENGTH = 9;
+    //private const NEW_FISH_CREATION_DURATION = 8; // FISH_CREATION_DURATION + 2
+    private const FISH_ARRAY_LENGTH = 9; // NEW_FISH_CREATION_DURATION + 1
 
     private $fishes;
     private $cycleIndex = 0;
@@ -40,8 +40,8 @@ class Fishes {
 
     private function growOnce(): void {
         $newFishes = array_shift($this->fishes);
-        $this->fishes[$this::FISH_CREATION_DURATION] += $newFishes; // add parents with 6 days left
         $this->fishes[] = $newFishes;                               // add new children with 8 days left
+        $this->fishes[$this::FISH_CREATION_DURATION] += $newFishes; // add parents with 6 days left
     }
 }
 

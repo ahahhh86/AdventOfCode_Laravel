@@ -13,17 +13,16 @@ class CrabSubmarines {
 
 
     public function __construct(string $str) {
-        $array = explode(",", $str);
         $this->subPositions = array_map(
             fn($i): int => (int) $i,
-            $array
+            explode(",", $str)
         );
     }
 
     public function accumulateFuelAt(int $position, callable $callback): int {
         return array_reduce(
             $this->subPositions,
-            fn($acc, $subPos): int => $acc + $callback($subPos, $position)
+            fn($carry, $subPos): int => $carry + $callback($subPos, $position)
         );
     }
 
@@ -61,14 +60,14 @@ class Day7 extends Day0 {
 
 
         $testSubs = new CrabSubmarines('16,1,2,0,4,2,7,1,2,14');
-        $this->addTest($testSubs->accumulateFuelAt(2, $calculateFuelPart1), 37);
         $this->addTest($testSubs->accumulateFuelAt(1, $calculateFuelPart1), 41);
         $this->addTest($testSubs->accumulateFuelAt(3, $calculateFuelPart1), 39);
         $this->addTest($testSubs->accumulateFuelAt(10,$calculateFuelPart1), 71);
+        $this->addTest($testSubs->accumulateFuelAt(2, $calculateFuelPart1), 37);
         $this->addTest($testSubs->getMinFuel($calculateFuelPart1), 37);
 
-        $this->addTest($testSubs->accumulateFuelAt(5, $calculateFuelPart2), 168);
         $this->addTest($testSubs->accumulateFuelAt(2, $calculateFuelPart2), 206);
+        $this->addTest($testSubs->accumulateFuelAt(5, $calculateFuelPart2), 168);
         $this->addTest($testSubs->getMinFuel($calculateFuelPart2), 168);
 
 

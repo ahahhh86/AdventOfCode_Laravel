@@ -12,13 +12,10 @@ class Chunks {
     private $isCorrupted = false;
     private $score = 0;
     private $closingStack = [];
-    
-    
+
+
 
     public function __construct(string $str) {
-        if (!preg_match('/[\(\[{<>}\)\]]+/', $str)) {
-            throw new \ErrorException("unexpected input: {$str}");
-        }
         $this->chunks = str_split($str, 1);
         $this->checkCorrupted();
         $this->calculateIncompleteScore();
@@ -54,6 +51,16 @@ class Chunks {
         };
     }
 
+    private static function getClosing(string $open): string {
+        return match ($open) {
+            '(' => ')',
+            '[' => ']',
+            '{' => '}',
+            '<' => '>',
+            default => throw new \ErrorException("unexpected input: {$open}")
+        };
+    }
+
     private function checkCorrupted(): void {
         foreach($this->chunks as $char) {
             switch ($char) {
@@ -63,7 +70,7 @@ class Chunks {
                 case '<':
                     $this->closingStack[] = self::getClosing($char);
                     break;
-                
+
                 case ')':
                 case ']':
                 case '}':
@@ -75,7 +82,7 @@ class Chunks {
                         return;
                     }
                     break;
-                
+
                 default:
                     throw new \ErrorException("unexpected input: {$char}");
             }
@@ -84,22 +91,12 @@ class Chunks {
 
     private function calculateIncompleteScore(): void {
         if ($this->isCorrupted) {return;}
+
         $completeArray = array_reverse($this->closingStack);
         $this->score = array_reduce(
             $completeArray,
-            fn($carry, $item): int => $carry*5 + self::getIncompleteScore($item)
+            fn($carry, $item): int => $carry * 5 + self::getIncompleteScore($item)
         );
-    }
-
-
-    private static function getClosing(string $open): string {
-        return match ($open) {
-            '(' => ')',
-            '[' => ']',
-            '{' => '}',
-            '<' => '>',
-            default => throw new \ErrorException("unexpected input: {$open}")
-        };
     }
 }
 
@@ -112,7 +109,7 @@ class NavigationSubsystem {
 
     public function __construct(array $stringList) {
         $this->lines = array_map(
-            fn($item) => new Chunks($item),
+            fn($item): Chunks => new Chunks($item),
             $stringList
         );
     }
@@ -121,13 +118,13 @@ class NavigationSubsystem {
         return array_reduce(
             array_filter(
                 $this->lines,
-                fn($item) => $item->isCorrupted()
+                fn($item): bool => $item->isCorrupted()
             ),
             fn($carry, $item): int => $carry + $item->getScore()
         );
     }
 
-    public function getScorePart2() {
+    public function getScorePart2(): int {
         $scores = array_map(
             fn($item): int => $item->getScore(),
             array_filter(
@@ -135,6 +132,7 @@ class NavigationSubsystem {
                 fn($item) => !$item->isCorrupted()
             )
         );
+
         sort($scores);
         $index = (int) (sizeof($scores)/2);
         return $scores[$index];
