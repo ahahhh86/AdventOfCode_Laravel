@@ -5,12 +5,21 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
+
+
 class BinaryMatrix {
     private $matrix = [];
 
+
+
     public function __construct(array $stringList) {
         $this->matrix = array_map(
-            fn($str) => str_split($str, 1),
+            function($str): array {
+                if (!preg_match('/[01]/', $str)) {
+                    throw new \ErrorException("unexpected input: {$str}");
+                }
+                return str_split($str, 1);
+            },
             $stringList
         );
     }
@@ -31,34 +40,22 @@ class BinaryMatrix {
         return $oxygenGeneratorRating * $co2ScrubberRating;
     }
 
+
+
     private static function getMostCommonBitAt(array $matrix, int $position): string {
-        $count0 = 0;
-        $count1 = 0;
+        $count = [0, 0];
 
-        foreach($matrix as $line) {
-            switch ($line[$position]) {
-                case '0':
-                    ++$count0;
-                    break;
-                
-                case '1':
-                    ++$count1;
-                    break;
-
-                default:
-                    throw new \ErrorException("unexpected input: {$line[$position]}");
+        array_walk(
+            $matrix,
+            function($line) use($position, &$count): void {
+                ++$count[$line[$position]];
             }
-        }
+        );
 
-        if ($count0 > $count1) {
-            return '0';
-        } else {
-            return '1'; // also if count1 == count0, but the puzzle (part 2) expects this
-        }
-
+        return ($count[0] > $count[1]) ? '0' : '1'; // returns 1 also if count1 == count0, but the puzzle (part 2) expects this
     }
 
-    private function getMostCommonBits(): array {
+    private function getMostCommonBits(): array { // TODO: try with array_column
         $result = [];
 
         for($i = 0; $i < sizeof($this->matrix[0]); ++$i) {
@@ -69,36 +66,25 @@ class BinaryMatrix {
     }
 
     private static function invertBits(string $str): string {
-        $result = '';
-
-        foreach (str_split($str, 1) as $chr) {
-            switch ($chr) {
-                case '0':
-                    $result .= '1';
-                    break;
-
-                case '1':
-                    $result .= '0';
-                    break;
-
-                default:
-                    throw new \ErrorException("unexpected input: {$chr}");
-            }
-        }
-
-        return $result;
+        $charArray = str_split($str, 1);
+        return array_reduce(
+            $charArray,
+            fn($carry, $chr): string => match ($chr) {
+                '0' => "{$carry}1",
+                '1' => "{$carry}0",
+                default => throw new \ErrorException("unexpected input: {$chr}")
+            },
+            ''
+        );
     }
 
     private function filterMatrix(array $matrix, int $position, string $filter): array {
-        $result = [];
-
-        foreach($matrix as $line) {
-            if ($line[$position] === $filter) {
-                $result[] = $line;
-            }
-        }
-
-        return $result;
+        return array_values(
+            array_filter(
+                $matrix,
+                fn($line): bool => $line[$position] === $filter
+            )
+        );
     }
 
     private function getRating(array $matrix, $invertFunction): int {
@@ -115,6 +101,8 @@ class BinaryMatrix {
         throw new \ErrorException('there are no lines left');
     }
 }
+
+
 
 class Day3 extends Day0 {
     public function __construct(Puzzle $puzzle) {
@@ -134,9 +122,9 @@ class Day3 extends Day0 {
         ]);
         $this->addTest($testMatrix->powerConsumption(), 198);
         $this->addTest($testMatrix->lifeSupportRating(), 230);
-        
-        
-        
+
+
+
         $matrix = new BinaryMatrix(explode(PHP_EOL, $puzzle->input));
         $this->addResult($matrix->powerConsumption(), (int)$puzzle->part1);// 3549854
         $this->addResult($matrix->lifeSupportRating(), (int)$puzzle->part2);// 3765399

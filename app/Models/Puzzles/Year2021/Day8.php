@@ -4,11 +4,21 @@ namespace App\Models\Puzzles\Year2021;
 
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
+use App\Models\Puzzles\MyArray;
+
+
 
 class Display {
-    public $patterns;
-    public $outputs;
+    private const COUNT_1478 = 4;
+    private const COUNT_0_TO_9 = 10;
+    private const SEGMENT_COUNTS = ['1' => 2, '4' => 4, '7' => 3, '8' => 7, '069' => 6, '235' => 5];
+    private const OUTPUT_DIGITS_COUNT = 4;
+
+    private $patterns;
+    private $outputs;
     private $identified = [];
+
+
 
     public function __construct(string $str) {
         [$patterns, $outputs] = explode(" | ", $str);
@@ -20,18 +30,10 @@ class Display {
         $this->identified = [];
         $this->identify1478();
 
-        $result = 0;
-
-        array_walk(
+        return MyArray::count_if(
             $this->outputs,
-            function($output) use (&$result): void {
-                if (in_array($output, $this->identified)) {
-                    ++$result;
-                }
-            }
+            fn($output): bool => in_array($output, $this->identified)
         );
-
-        return $result;
     }
 
     public function calculateOutputNumber(): int {
@@ -39,13 +41,11 @@ class Display {
 
         $result = array_reduce(
             $this->outputs,
-            function($acc, $output): string {
-                return $acc . array_keys($this->identified, $output)[0];
-            },
+            fn($carry, $output): string => $carry . array_keys($this->identified, $output)[0],
             ''
         );
 
-        if (strlen($result) !== 4) {
+        if (strlen($result) !== self::OUTPUT_DIGITS_COUNT) {
             throw new \ErrorException('could not find correct output');
         }
 
@@ -80,86 +80,99 @@ class Display {
         $segments = str_split($digit, 1);
         return array_reduce(
             $segments,
-            function($acc, $segment) use ($subtract): string {
-                    return str_contains($subtract, $segment) ? $acc : $acc . $segment;
-            },
+            fn($carry, $segment): string => $carry . (str_contains($subtract, $segment) ?  '' : $segment),
             ''
         );
     }
 
+
+
     private function identify1478(): void {
-        if (sizeof($this->identified) === 4) {return ;}
+        if (sizeof($this->identified) === self::COUNT_1478) {return ;}
         $this->identified = [];
-    
+
         array_walk(
             $this->patterns,
             function($pattern): void {
                 switch(strlen($pattern)) {
-                    case 2:
+                    case self::SEGMENT_COUNTS['1']:
                         $this->identified[1] = $pattern;
                         break;
-                    case 4:
+                    case self::SEGMENT_COUNTS['4']:
                         $this->identified[4] = $pattern;
                         break;
-                    case 3:
+                    case self::SEGMENT_COUNTS['7']:
                         $this->identified[7] = $pattern;
                         break;
-                    case 7:
+                    case self::SEGMENT_COUNTS['8']:
                         $this->identified[8] = $pattern;
                         break;
                 }
             }
         );
 
-        if (sizeof($this->identified) !== 4) {
+        if (sizeof($this->identified) !== self::COUNT_1478) {
             throw new \ErrorException('could not find all numbers');
         }
     }
 
-    private function identifyNumbers(): void {
-        if (sizeof($this->identified) === 10) {return ;}
+    private function identify069($digit): void {
+        if (self::isInDigit($this->identified[1], $digit)) {
+            if (self::isInDigit($this->identified[4], $digit)) {
+                $this->identified[9] = $digit;
+            } else {
+                $this->identified[0] = $digit;
+            }
+        } else {
+            $this->identified[6] = $digit;
+        }
+    }
 
-        $this->identify1478();
-
-        $patternLength069 = 6;
-        $patternLength235 = 5;
-        $reduced4By1 = self::reduceDigit($this->identified[4], $this->identified[1]);
-
-        foreach($this->patterns as $digit) {//TODO: refactor split into smaller methods
-            // identify 0, 6 or 9?
-            if (strlen($digit) === $patternLength069) {
-                if (self::isInDigit($this->identified[1], $digit)) {
-                    if (self::isInDigit($this->identified[4], $digit)) {
-                        $this->identified[9] = $digit;
-                    } else {
-                        $this->identified[0] = $digit;
-                    }
-                } else {
-                    $this->identified[6] = $digit;
-                }
-
-            // identify 2, 3 or 5?
-            } else if (strlen($digit) === $patternLength235) {
-                if (self::isInDigit($this->identified[1], $digit)) {
-                    $this->identified[3] = $digit;
-                } else {
-                    if (self::isInDigit($reduced4By1, $digit)) {
-                        $this->identified[5] = $digit;
-                    } else {
-                        $this->identified[2] = $digit;
-                    }
-                }
+    private function identify235($digit, $reduced4By1): void {
+        if (self::isInDigit($this->identified[1], $digit)) {
+            $this->identified[3] = $digit;
+        } else {
+            if (self::isInDigit($reduced4By1, $digit)) {
+                $this->identified[5] = $digit;
+            } else {
+                $this->identified[2] = $digit;
             }
         }
+    }
 
-        if (sizeof($this->identified) !== 10) {
+    private function identifyNumbers(): void {
+        if (sizeof($this->identified) === self::COUNT_0_TO_9) {return ;}
+
+        $this->identify1478();
+        $reduced4By1 = self::reduceDigit($this->identified[4], $this->identified[1]);
+
+        array_walk(
+            $this->patterns,
+            function($digit) use($reduced4By1): void {
+                switch (strlen($digit)) {
+                    case self::SEGMENT_COUNTS['235']:
+                        $this->identify235($digit, $reduced4By1);
+                        break;
+
+                    case self::SEGMENT_COUNTS['069']:
+                        $this->identify069($digit);
+                        break;
+                }
+            }
+        );
+
+        if (sizeof($this->identified) !== self::COUNT_0_TO_9) {
             throw new \ErrorException('could not find all numbers');
         }
     }
 }
 
+
+
 class Displays {
     private $displays = [];
+
+
 
     public function __construct(array $stringList) {
         $this->displays = array_map(
@@ -171,17 +184,19 @@ class Displays {
     public function countDigits1478(): int {
         return array_reduce(
             $this->displays,
-            fn($acc, $display) => $acc + $display->count1478()
+            fn($carry, $display): int => $carry + $display->count1478()
         );
     }
 
     public function accumulateDigits(): int {
         return array_reduce(
             $this->displays,
-            fn($acc, $display): int => $acc + $display->calculateOutputNumber()
+            fn($carry, $display): int => $carry + $display->calculateOutputNumber()
         );
     }
 }
+
+
 
 class Day8 extends Day0 {
     public function __construct(Puzzle $puzzle) {
@@ -198,6 +213,7 @@ class Day8 extends Day0 {
             'gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce'
         ]);
         $testDisplays2 = new Displays(['acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf']);
+
         $this->addTest($testDisplays->countDigits1478(), 26);
         $this->addTest($testDisplays2->accumulateDigits(), 5353);
         $this->addTest($testDisplays->accumulateDigits(), 61229);

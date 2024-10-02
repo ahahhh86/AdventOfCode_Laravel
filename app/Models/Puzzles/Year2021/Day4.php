@@ -5,33 +5,52 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
+
+
+class Number {
+    private $number;
+    private $checked = false;
+
+
+
+    public function __construct(int $number) {
+        $this->number = $number;
+    }
+
+    public function getNumber(): int {
+        return $this->number;
+    }
+
+    public function getScore(): int {
+        return $this->checked ? 0 : $this->number;
+    }
+
+    public function check(int $number): bool {
+        if ($number === $this->number) {
+            $this->checked = true;
+        }
+        return $this->checked;
+    }
+
+    public function isChecked(): bool {
+        return $this->checked;
+    }
+}
+
+
+
 class Board {
     private $board;
     private $isWon = false;
 
+
+
     public function __construct(array $board) {
         $this->board = $board;
-        array_walk_recursive($this->board, fn(&$x) => $x = ['num' => (int) $x, 'check' => false]);
-    }
-
-    private static function isLineChecked(array $line): bool {
-        return array_reduce(
-            $line,
-            fn($acc, $item): bool => $acc && $item['check'],
-            true
+        array_walk_recursive(
+            $this->board,
+            fn(&$x): Number => $x = new Number($x)
         );
-    }
-
-    private static function isWonHorizontal(array $board): bool {
-        return array_reduce(
-            $board,
-            fn($acc, $line): bool => $acc || self::isLineChecked(line: $line),
-            false
-        );
-    }
-
-    private static function transpose(array $board): array {
-        return array_map(null, ...$board);
     }
 
     public function isWon(): bool {
@@ -39,33 +58,43 @@ class Board {
     }
 
     public function setMarker(int $number): void {
-        array_walk($this->board, function(&$line) use ($number): void{
-            array_walk($line, function(&$item) use ($number): void {
-                if ($item['num'] === $number) {
-                    $item['check'] = true;
-                }
-            });
-        });
+        $transpose = fn(array $board): array => array_map(null, ...$board);
+
+        array_walk_recursive(
+            $this->board,
+            fn(&$item): bool => $item->check($number)
+        );
 
         $this->isWon =
             self::isWonHorizontal($this->board) ||
-            self::isWonHorizontal(self::transpose($this->board)); // aka isWonVertical
+            self::isWonHorizontal($transpose($this->board)); // aka isWonVertical
     }
 
     public function calculateScore(int $number): int {
-        $result = 0;
+        $sum = array_reduce(
+            array_merge(...$this->board),
+            fn($carry, $item): int => $carry + $item->getScore()
+        );
 
-        array_walk($this->board, function($line) use (&$result): void{
-            array_walk($line, function($item) use (&$result): void {
-                        if (!$item['check']) {
-                            $result += $item['num'];
-                        }
-            });
-        });
+        return $sum * $number;
+    }
 
-        $result *= $number;
 
-        return $result;
+
+    private static function isWonHorizontal(array $board): bool {
+        $isLineChecked = function(array $line): bool {
+            return array_reduce(
+                $line,
+                fn($carry, $item): bool => $carry && $item->isChecked(),
+                true
+            );
+        };
+
+        return array_reduce(
+            $board,
+            fn($carry, $line): bool => $carry || $isLineChecked($line),
+            false
+        );
     }
 }
 
@@ -78,20 +107,24 @@ class Bingo {
     public function __construct(array $stringList) {
         $this->numbers = explode(',', $stringList[0]);
 
-        array_splice($stringList, 0, 2);
+        array_splice($stringList, 0, 2); // first line are $numbers and second line is empty
         $boards = [];
-        $boardNum=0;
+        $boardNum = 0;
 
-        foreach($stringList as $str) {
-            if ($str === "") {
-                ++$boardNum;
-                $boards[$boardNum] = [];
-                continue;
+        array_walk(
+            $stringList,
+            function($str) use (&$boardNum, &$boards): void {
+                if ($str === "") {
+                    ++$boardNum;
+                    $boards[$boardNum] = [];
+                    return;
+                }
+
+                // small numbers are filled with spaces (' 7'), but every array should have  the same size, so empty arrays nedd to be skipped
+                $boards[$boardNum][] = preg_split('/[\s]+/', $str, flags: PREG_SPLIT_NO_EMPTY);
             }
+        );
 
-            // small numbers are filled with spaces (' 7'), but every array should have  the same size, so empty arrays nedd to be skipped
-            $boards[$boardNum][] = preg_split(pattern: '/[\s]+/', subject: $str, flags: PREG_SPLIT_NO_EMPTY);
-        }
         $this->boards = array_map(fn($board) => new Board($board), $boards);
     }
 

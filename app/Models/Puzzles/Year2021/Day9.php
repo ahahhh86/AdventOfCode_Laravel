@@ -10,15 +10,21 @@ use App\Models\Puzzles\Position;
 
 class Map {
     private const LARGES_BASINS_COUNT = 3;
+    private const MAX_HEIGHT = 9;
+
     private $map = [];
     private $lowPoints = [];
-    private const MAX_HEIGHT = 9;
+
+
 
     public function __construct(array $heightMap) {
         $this->map = array_map(
             function($stringHeights): array {
                 $charHeights = str_split($stringHeights, 1);
-                return array_map(fn($height) => (int)$height, $charHeights);
+                return array_map(
+                    fn($height): int => (int)$height,
+                    $charHeights
+                );
             },
             $heightMap
         );
@@ -42,6 +48,8 @@ class Map {
     public function multiplyBasins(): int {
         return array_product($this->get3BiggestBasins());
     }
+
+
 
     private function checkMin(Position $position): bool {
         $heights = [];
@@ -96,6 +104,8 @@ class Map {
         return array_splice($basins, 0, self::LARGES_BASINS_COUNT);
     }
 }
+
+
 
 class Day9 extends Day0 {
     public function __construct(Puzzle $puzzle) {

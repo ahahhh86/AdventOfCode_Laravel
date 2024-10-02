@@ -4,9 +4,11 @@ namespace App\Models\Puzzles;
 
 use App\Models\Puzzle;
 
+
+
 class DaySolver {
-    public $tests = [];
-    public $results = [];
+    private $tests = [];
+    private $results = [];
 
 
 

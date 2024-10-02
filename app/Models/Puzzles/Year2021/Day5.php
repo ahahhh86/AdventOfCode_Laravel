@@ -4,11 +4,16 @@ namespace App\Models\Puzzles\Year2021;
 
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
+use App\Models\Puzzles\MyArray;
 use App\Models\Puzzles\Position;
+
+
 
 class VentLine {
     private $positions = [];
     private $isDiagonal = false;
+
+
 
     public function __construct(string $str) {
         $buffer = preg_split("/[\s,]+/", $str);
@@ -17,7 +22,8 @@ class VentLine {
         $xStep = $vents['to']->x <=> $vents['from']->x;
         $yStep = $vents['to']->y <=> $vents['from']->y;
 
-        $countSteps = ($yStep === 0) ? abs($vents['to']->x - $vents['from']->x) : abs($vents['to']->y - $vents['from']->y);
+        $axis = ($yStep === 0) ? 'x' : 'y';
+        $countSteps = abs($vents['to']->$axis - $vents['from']->$axis);
         if ($yStep !== 0 && $xStep !== 0) {
             $this->isDiagonal = true;
         }
@@ -29,25 +35,50 @@ class VentLine {
         }
     }
 
-    public function isDiagonal(): bool {return $this->isDiagonal;}
+    public function isDiagonal(): bool {
+        return $this->isDiagonal;
+    }
 
-    public function getPositions(): array {return $this->positions;}
+    public function getPositions(): array {
+        return $this->positions;
+    }
 }
+
+
 
 class Map {
     private const MAP_SIZE = 1000;
 
     private $ventLines;
-    private $map;
+
+
 
     public function __construct(array $stringList) {
-        $this->ventLines = array_map(fn($str): VentLine => new VentLine($str), $stringList);
-
-        $this->reset();
+        $this->ventLines = array_map(
+            fn($str): VentLine => new VentLine($str),
+            $stringList
+        );
     }
 
-    public function reset(): void {
-        $this->map = array_fill(
+    public function findSafeSpaces(bool $diagonal = false): int {
+        $map = self::createMap();
+
+        array_walk(
+            $this->ventLines,
+            function($ventLine) use ($diagonal, &$map): void {
+                if ($diagonal || !$ventLine->isDiagonal()) {
+                    $this->addVentLine($map, $ventLine);
+                }
+            }
+        );
+
+        return $this->countCrossings($map);
+    }
+
+
+
+    private static function createMap(): array {
+        return array_fill(
             0,
             self::MAP_SIZE,
             array_fill(
@@ -58,33 +89,21 @@ class Map {
         );
     }
 
-    public function findSafeSpaces(bool $diagonal = false): int {
-        array_walk($this->ventLines, function($ventLine) use ($diagonal): void {
-            $this->addVentLine($ventLine, $diagonal);
-        });
-
-        return $this->countCrossings();
-    }
-
-
-
-    private function addVentLine(VentLine $ventLine, bool $diagonal): void {
-        if (!$diagonal && $ventLine->isDiagonal()) {return;}
-
+    private function addVentLine(array &$map, VentLine $ventLine): void {
         $vents = $ventLine->getPositions();
-        array_walk($vents, function($vent): void {
-            ++$this->map[$vent->x][$vent->y];
-        });
+        array_walk(
+            $vents,
+            function($vent) use (&$map): void {
+                ++$map[$vent->x][$vent->y];
+            }
+        );
     }
 
-    private function countCrossings(): int{
-    return array_reduce(
-        $this->map,
-        fn($acc, $ventCounts): int => $acc + sizeof(array_filter(
-            $ventCounts,
-            fn($ventCount): bool => $ventCount > 1
-        ))
-    );
+    private function countCrossings(array $map): int{
+        return MyArray::count_if(
+                array_merge(...$map),
+                fn($item): bool => $item > 1
+        );
     }
 }
 
@@ -103,14 +122,12 @@ class Day5 extends Day0 {
             '5,5 -> 8,2',
         ]);
         $this->addTest($testMap->findSafeSpaces(), 5);
-        $testMap->reset();
         $this->addTest($testMap->findSafeSpaces(true), 12);
-        
-        
-        
+
+
+
         $map = new Map(explode(PHP_EOL, $puzzle->input));
         $this->addResult($map->findSafeSpaces(), (int)$puzzle->part1); // 8622
-        $map->reset();
         $this->addResult($map->findSafeSpaces(true), (int)$puzzle->part2); // 22037
     }
 }

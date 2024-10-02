@@ -5,28 +5,41 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
+
+
 class CrabSubmarines {
-    private $subPosition = [];
+    private $subPositions = [];
+
+
 
     public function __construct(string $str) {
-        $arr = explode(",", $str);
-        $this->subPosition = array_map(fn($i): int => (int)$i, $arr);
+        $array = explode(",", $str);
+        $this->subPositions = array_map(
+            fn($i): int => (int) $i,
+            $array
+        );
     }
 
-    public function accumulateFuelAt(int $position, $fn): int {
-        return array_reduce($this->subPosition, fn($acc, $item): int => $acc + $fn($item, $position));
+    public function accumulateFuelAt(int $position, callable $callback): int {
+        return array_reduce(
+            $this->subPositions,
+            fn($acc, $subPos): int => $acc + $callback($subPos, $position)
+        );
     }
 
-    public function getMinFuel($fn): int {
+    public function getMinFuel(callable $callback): int {
         $result = PHP_INT_MAX;
-        $max = max($this->subPosition);
+        $loopStart = min($this->subPositions);
+        $loopEnd = max($this->subPositions);
 
-        for ($i = min($this->subPosition); $i <= $max; ++$i) {
-            $result = min($result, $this->accumulateFuelAt($i, $fn));
+        for ($i = $loopStart; $i <= $loopEnd; ++$i) {
+            $result = min($result, $this->accumulateFuelAt($i, $callback));
         }
 
         return $result;
     }
+
+
 
     public static function calculateFuelPart1(int $a, int $b): int {
         return abs($a - $b);
@@ -34,9 +47,11 @@ class CrabSubmarines {
 
     public static function calculateFuelPart2(int $a, int $b): int {
         $n = abs($a - $b);
-        return (int) ($n*($n+1)/2);
+        return $n * ($n + 1) / 2; // = Σ(1 + ... + $n)
     }
 }
+
+
 
 class Day7 extends Day0 {
     public function __construct(Puzzle $puzzle) {

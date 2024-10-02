@@ -2,9 +2,12 @@
 
 namespace App\Models\Puzzles;
 
+
+
 abstract class Day0 {
     protected $tests = [];
     protected $results = [];
+
 
 
     public function getTests(): array {
@@ -16,10 +19,10 @@ abstract class Day0 {
     }
 
     protected function addTest($result, $expected): void {
-        $this->tests[] = ['result' => $result, 'expected' => $expected];
+        $this->tests[] = compact('result', 'expected');
     }
 
     protected function addResult($result, $expected): void {
-        $this->results[] = ['result' => $result, 'expected' => $expected];
+        $this->results[] = compact('result', 'expected');
     }
 }
