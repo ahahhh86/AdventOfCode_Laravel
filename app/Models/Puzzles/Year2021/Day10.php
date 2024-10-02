@@ -7,8 +7,11 @@ use App\Models\Puzzles\Day0;
 
 
 
-class Stack {
-    private $line;
+class Chunks {
+    private $chunks;
+    private $isCorrupted = false;
+    private $score = 0;
+    private $closingStack = [];
     
     
 
@@ -16,46 +19,76 @@ class Stack {
         if (!preg_match('/[\(\[{<>}\)\]]+/', $str)) {
             throw new \ErrorException("unexpected input: {$str}");
         }
-        $this->line = str_split($str, 1);
+        $this->chunks = str_split($str, 1);
+        $this->checkCorrupted();
+        $this->calculateIncompleteScore();
     }
 
-    public function walk() {
-        $stack = [];
-
-        array_walk(
-            $line,
-            function($char) use(&$stack) {
-                switch ($char) {
-                    case '(':
-                    case '[':
-                    case '{':
-                    case '<':
-                        $stack[] = self::getClosing($char);
-                        break;
-                    
-                    case ')':
-                    case ']':
-                    case '}':
-                    case '>':
-                        # code...
-                        break;
-                    
-                    default:
-                        throw new \ErrorException("unexpected input: {$char}");
-                }
-            }
-        );
-
+    public function getScore(): int {
+        return $this->score;
     }
 
-    private static function getScore(string $chunkCharacter): int {
-        return match ($chunkCharacter) {
+    public function isCorrupted(): bool {
+        return $this->isCorrupted;
+    }
+
+
+
+    private static function getCorruptedScore(string $closing): int {
+        return match ($closing) {
             ')' => 3,
             ']' => 57,
             '}' => 1197,
             '>' => 25137,
-            default => throw new \ErrorException("unexpected input: {$chunkCharacter}")
+            default => throw new \ErrorException("unexpected input: {$closing}")
         };
+    }
+
+    private static function getIncompleteScore(string $closing): int {
+        return match ($closing) {
+            ')' => 1,
+            ']' => 2,
+            '}' => 3,
+            '>' => 4,
+            default => throw new \ErrorException("unexpected input: {$closing}")
+        };
+    }
+
+    private function checkCorrupted(): void {
+        foreach($this->chunks as $char) {
+            switch ($char) {
+                case '(':
+                case '[':
+                case '{':
+                case '<':
+                    $this->closingStack[] = self::getClosing($char);
+                    break;
+                
+                case ')':
+                case ']':
+                case '}':
+                case '>':
+                    $closing = array_pop($this->closingStack);
+                    if ($closing !== $char) {
+                        $this->isCorrupted = true;
+                        $this->score = self::getCorruptedScore($char);
+                        return;
+                    }
+                    break;
+                
+                default:
+                    throw new \ErrorException("unexpected input: {$char}");
+            }
+        }
+    }
+
+    private function calculateIncompleteScore(): void {
+        if ($this->isCorrupted) {return;}
+        $completeArray = array_reverse($this->closingStack);
+        $this->score = array_reduce(
+            $completeArray,
+            fn($carry, $item): int => $carry*5 + self::getIncompleteScore($item)
+        );
     }
 
 
@@ -72,9 +105,47 @@ class Stack {
 
 
 
-class Day1 extends Day0 {
+class NavigationSubsystem {
+    private $lines;
+
+
+
+    public function __construct(array $stringList) {
+        $this->lines = array_map(
+            fn($item) => new Chunks($item),
+            $stringList
+        );
+    }
+
+    public function getScorePart1(): int {
+        return array_reduce(
+            array_filter(
+                $this->lines,
+                fn($item) => $item->isCorrupted()
+            ),
+            fn($carry, $item): int => $carry + $item->getScore()
+        );
+    }
+
+    public function getScorePart2() {
+        $scores = array_map(
+            fn($item): int => $item->getScore(),
+            array_filter(
+                $this->lines,
+                fn($item) => !$item->isCorrupted()
+            )
+        );
+        sort($scores);
+        $index = (int) (sizeof($scores)/2);
+        return $scores[$index];
+    }
+}
+
+
+
+class Day10 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $testdepths = new Depths([
+        $testSystem = new NavigationSubsystem([
             '[({(<(())[]>[[{[]{<()<>>',
             '[(()[<>])]({[<{<<[]>>(',
             '{([(<{}[<>[]}>{[]{[(<()>',
@@ -86,13 +157,13 @@ class Day1 extends Day0 {
             '<{([([[(<>()){}]>(<<{{',
             '<{([{{}}[<[[[<>{}]]]>[]]',
         ]);
-        // $this->addTest($testdepths->countDeeper(), 7);
-        // $this->addTest($testdepths->countDeeperAverage(), 5);
+        $this->addTest($testSystem->getScorePart1(), 26397);
+        $this->addTest($testSystem->getScorePart2(), 288957);
 
 
 
-        // $depths = new Depths(explode(PHP_EOL, $puzzle->input));
-        // $this->addResult($depths->countDeeper(), (int)$puzzle->part1);// 1759
-        // $this->addResult($depths->countDeeperAverage(), (int)$puzzle->part2);// 1805
+        $system = new NavigationSubsystem(explode(PHP_EOL, $puzzle->input));
+        $this->addResult($system->getScorePart1(), (int)$puzzle->part1); // 341823
+        $this->addResult($system->getScorePart2(), (int)$puzzle->part2); // 2801302861
     }
 }
