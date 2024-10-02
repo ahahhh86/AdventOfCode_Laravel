@@ -56,7 +56,7 @@ class Depths {
 
 class Day1 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $testdepths = new Depths([
+        $testDepths = new Depths([
             '199',
             '200',
             '208',
@@ -68,13 +68,13 @@ class Day1 extends Day0 {
             '260',
             '263'
         ]);
-        $this->addTest($testdepths->countDeeper(), 7);
-        $this->addTest($testdepths->countDeeperAverage(), 5);
+        $this->addTest($testDepths->countDeeper(), 7);
+        $this->addTest($testDepths->countDeeperAverage(), 5);
 
 
 
         $depths = new Depths(explode(PHP_EOL, $puzzle->input));
-        $this->addResult($depths->countDeeper(), (int)$puzzle->part1);// 1759
-        $this->addResult($depths->countDeeperAverage(), (int)$puzzle->part2);// 1805
+        $this->addResult($depths->countDeeper(), (int)$puzzle->part1); // 1759
+        $this->addResult($depths->countDeeperAverage(), (int)$puzzle->part2); // 1805
     }
 }
