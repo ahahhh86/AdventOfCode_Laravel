@@ -52,15 +52,15 @@ class Map {
 
 
 
-    private function checkMin(Position $position): bool {
+    private function checkMin(Position $pos): bool {
         $heights = [];
         for($i = -1; $i <= 1; ++$i) {
             for($j = -1; $j <= 1; ++$j) {
-                $heights[] = $this->map[$position->x + $i][$position->y + $j] ?? PHP_INT_MAX;
+                $heights[] = $this->map[$pos->x + $i][$pos->y + $j] ?? PHP_INT_MAX;
             }
         }
 
-        return $this->map[$position->x][$position->y] === min($heights);
+        return $this->map[$pos->x][$pos->y] === min($heights);
     }
 
     private function getBasinPositions(Position $pos): array {
