@@ -7,94 +7,58 @@ use App\Models\Puzzles\Day0;
 
 
 
-enum CaveStatus {
-    case Start;
-    case End;
-    case Small;
-    case Big;
-}
-
 class Cave {
     private $name;
-    private $connections;
-    private $Status;
+    private $connections = [];
 
-    public function __construct(string $name, string $connection) {
+
+
+    public function __construct(string $name) {
         $this->name = $name;
-        $this->connections = [$connection];
-
-        $this->Status = match ($this->name) {
-            'start' => CaveStatus::Start,
-            'end' => CaveStatus::End,
-            default => (strtolower($this->name) === $this->name) ? CaveStatus::Small : CaveStatus::Big
-        };
     }
 
     public function __tostring(): string {
         return $this->name;
     }
 
-    public function isStart(): bool {
-        return $this->Status === CaveStatus::Start;
-    }
-
-    public function isEnd(): bool {
-        return $this->Status === CaveStatus::End;
-    }
-
-    public function isSmall(): bool {
-        return $this->Status === CaveStatus::Small;
-    }
-
-    public function addConnection(string $name): void {
-        $this->connections[] = $name;
+    public function addConnection(Cave $connection): void {
+        if ($connection->__tostring() === 'start' || $this->name === 'end') {return;}
+        $this->connections[$connection->__tostring()] = &$connection;
     }
 }
 
-
-
-class Caves {
+class Connections {
+    private $connections;
     private $caves = [];
 
 
 
     public function __construct(array $stringList) {
+        $this->connections = array_map(
+            fn($str) => explode('-', $str),
+            $stringList
+        );
+
+        $this->createCaves();
+        $this->addConnections();
+    }
+
+    private function createCaves(): void {
+        $names = array_merge(...$this->connections);
+        $names = array_unique($names);
+
         array_walk(
-            $stringList,
-            function($str): void {
-                [$cave1, $cave2] = explode('-', $str);
-                $this->add($cave1, $cave2);
-                $this->add($cave2, $cave1);
-            }
+            $names,
+            fn($str): Cave => $this->caves[$str] = new Cave($str),
         );
     }
 
-    public function countPaths(): int {
-        $routes = [$this->findStart()];
-        $this->countPathsR($routes);
-        return sizeof($routes);
-    }
-
-    private function add(string $name, string $connection): void {
-        if (isset($this->caves[$name])) {
-            $this->caves[$name]->addConnection($connection);
-        } else {
-            $this->caves[$name] = new Cave($name, $connection);
+    private function addConnections(): void {
+        foreach($this->connections as $connection) {
+            [$name1, $name2] = [$connection[0], $connection[1]];
+            $this->caves[$name1]->addConnection($this->caves[$name2]);
+            $this->caves[$name2]->addConnection($this->caves[$name1]);
         }
-    }
-
-    private function findStart(): string {
-        foreach($this->caves as $cave) {
-            if ($cave->isStart()) {
-                return $cave;
-            }
-        }
-
-        throw new \ErrorException("can not find the start");
-    }
-
-    private function countPathsR(array &$paths): void {
-        // TODO:
     }
 }
 
@@ -102,7 +66,7 @@ class Caves {
 
 class Day12 extends Day0 {
     public function __construct(Puzzle $puzzle) {
-        $test1 = new Caves([
+        $test1 = new Connections([
             'start-A',
             'start-b',
             'A-c',
@@ -111,6 +75,7 @@ class Day12 extends Day0 {
             'A-end',
             'b-end',
         ]);
+        dd($test1);
         // $test2 = new Connections([
         //     'dc-end',
         //     'HN-start',
@@ -143,7 +108,7 @@ class Day12 extends Day0 {
         //     'pj-fs',
         //     'start-RW',
         // ]);
-        $this->addTest($test1->countPaths(), 10);
+        // $this->addTest($test1->countPaths(), 10);
 
 
 
