@@ -5,7 +5,7 @@ namespace App\Models\Puzzles\Year2021;
 use App\Models\Puzzle;
 use App\Models\Puzzles\Day0;
 
-
+use function PHPUnit\Framework\isNull;
 
 class Cave {
     private $name;
@@ -23,7 +23,62 @@ class Cave {
 
     public function addConnection(Cave $connection): void {
         if ($connection->__tostring() === 'start' || $this->name === 'end') {return;}
-        $this->connections[$connection->__tostring()] = &$connection;
+        $this->connections[$connection->__tostring()] = $connection;
+    }
+
+    public function getName(): string {
+        return $this->name;
+    }
+
+    public function getConnections(): array {
+        return $this->connections;
+    }
+}
+
+class MapNode {
+    private $previous = null;
+    // private $next = [];
+    private $cave;
+    // private $path = null; // TODO: maybe needed to increase speed
+
+    public function __construct(Cave $cave, ?MapNode &$previous) {
+        if (isset($previous)) {$this->previous = &$previous;}
+        $this->cave = $cave;
+    }
+
+    public function getPath(): array {
+        if (isNull($this->previous)) {
+            return [$this->cave->getName()];
+        } else {
+            return array_merge($this->previous->getPath(), [$this->cave->getName()]);
+        }
+    }
+
+    public function createNext(array &$caves): array {
+        $buffer = [];
+
+        foreach($this->cave->getConnections() as $nextCave) {
+            if (strtoupper($nextCave->getName()) === $nextCave->getName()) {
+                $buffer[] = new MapNode($nextCave, $this);
+            }
+        }// TODO:
+        $result = [];
+        foreach($buffer as $cave) {
+            $result = array_merge($result, $cave->createNext($caves));
+        }
+
+        return $result;
+    }
+}
+
+class Map {
+    private $caveNodes = [];
+
+    public function __construct(array &$caves) {
+        $nullRef = null;
+        $this->caveNodes[] = new MapNode($caves['start'], $nullRef);
+        $this->caveNodes = array_merge($this->caveNodes, $this->caveNodes[0]->createNext($caves));
+        dd($this->caveNodes);
     }
 }
 
@@ -59,6 +114,7 @@ class Connections {
             $this->caves[$name1]->addConnection($this->caves[$name2]);
             $this->caves[$name2]->addConnection($this->caves[$name1]);
         }
+        $x = new Map($this->caves);
     }
 }
 
